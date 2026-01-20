@@ -1,0 +1,53 @@
+steps:
+  # 1. Build the assets (Node.js)
+  - name: 'node:20'
+    entrypoint: 'npm'
+    args: ['install', '--legacy-peer-deps']
+    dir: '.'
+
+  - name: 'node:20'
+    entrypoint: 'npm'
+    args: ['run', 'build']
+    dir: '.'
+
+  # 2. Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/sgai-repo/portal-empleabilidad:latest'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+
+  # 3. Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/sgai-repo/portal-empleabilidad:latest'
+
+  # 4. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'portal-app'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/sgai-repo/portal-empleabilidad:latest'
+      - '--region'
+      - 'us-central1'
+      - '--set-cloudsql-instances'
+      - 'sgai-cft-2026:us-central1:sgai-postgres'
+      - '--set-env-vars'
+      - 'DB_HOST=/cloudsql/sgai-cft-2026:us-central1:sgai-postgres,APP_ENV=production,APP_DEBUG=false'
+      # Nota: Los secretos y otras variables sensibles se mantienen configurados en el servicio
+      - '--update-secrets'
+      - '/app/secrets/laravel-env=laravel-env:latest'
+      - '--allow-unauthenticated'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sgai-repo/portal-empleabilidad:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
