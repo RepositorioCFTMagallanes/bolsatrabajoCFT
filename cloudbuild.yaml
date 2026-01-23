@@ -1,26 +1,37 @@
 steps:
-  # Deploy to Cloud Run using source-based deployment
-  # This command will automatically build the container if a Dockerfile is present
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:$SHORT_SHA', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:latest', '.']
+
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:$SHORT_SHA']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:latest']
+
+  # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
       - 'portal-empleabilidad'
-      - '--source'
-      - '.'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:$SHORT_SHA'
       - '--region'
       - 'us-central1'
       - '--set-cloudsql-instances'
-      - 'portal-empleabilidad-cft:us-central1:empleabilidad-db'
+      - '$PROJECT_ID:us-central1:empleabilidad-db'
       - '--set-env-vars'
-      - 'DB_HOST=/cloudsql/portal-empleabilidad-cft:us-central1:empleabilidad-db,APP_ENV=production,APP_DEBUG=false'
+      - 'DB_HOST=/cloudsql/$PROJECT_ID:us-central1:empleabilidad-db,APP_ENV=production,APP_DEBUG=false'
       - '--update-secrets'
       - '/app/secrets/laravel-env=laravel-env:latest'
       - '--allow-unauthenticated'
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sgai-repo/portal-empleabilidad:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY

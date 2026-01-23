@@ -1,48 +1,45 @@
 #!/bin/sh
-# No usamos 'set -e' al inicio para tener más control sobre los errores
-echo "--- Iniciando script de entrada ---"
-echo "USER: $(id)"
-echo "PATH: $PATH"
-echo "PWD: $(pwd)"
-echo "PHP version: $(php -v | head -n 1 || echo 'php no encontrado')"
-ls -la /var/www/html/public/index.php || echo "index.php NO ENCONTRADO en /var/www/html/public/"
+# No 'set -e' for the whole script to allow background tasks and errors
+# set -e
 
-# Ahora sí, si falla algo crítico, paramos si es necesario (o lo manejamos manual)
-# set -e 
+echo "--- Starting Entrypoint Script ---"
+echo "Port: ${PORT:=8080}"
 
-# Copiar secreto si está montado
+# Copy secrets if available
 if [ -f /app/secrets/laravel-env ]; then
-    echo "Copiando configuración desde /app/secrets/laravel-env"
+    echo "Using secrets from /app/secrets/laravel-env"
     cp /app/secrets/laravel-env /var/www/html/.env
 elif [ -f /secrets/laravel-env ]; then
-    echo "Copiando configuración desde /secrets/laravel-env"
+    echo "Using secrets from /secrets/laravel-env"
     cp /secrets/laravel-env /var/www/html/.env
 else
-    echo "ADVERTENCIA: No se encontró archivo de secretos. Usando .env actual si existe."
+    echo "Notice: No secret file found at /app/secrets/laravel-env or /secrets/laravel-env"
 fi
 
-# Asegurar permisos correctos
-echo "Ajustando permisos de storage y cache..."
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+# Configure Nginx port
+echo "Configuring Nginx to listen on port: $PORT"
+sed -i "s/LISTEN_PORT/$PORT/g" /etc/nginx/http.d/default.conf
 
-# Paso de optimización (opcional pero recomendado)
-echo "Optimizando caches de Laravel..."
-php artisan config:cache || echo "No se pudo cachear config"
-php artisan route:cache || echo "No se pudo cachear rutas"
-php artisan view:cache || echo "No se pudo cachear vistas"
+# Set permissions (in background to start faster)
+echo "Setting permissions for storage and cache..."
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Migraciones
-echo "Intentando ejecutar migraciones..."
-php artisan migrate --force || echo "ADVERTENCIA: Las migraciones fallaron. Verifica la conexión a la base de datos."
+# Run Laravel optimizations and migrations in BACKGROUND
+echo "Starting Laravel tasks in background..."
+(
+    php artisan config:cache || echo "Config cache failed"
+    php artisan route:cache || echo "Route cache failed"
+    php artisan view:cache || echo "View cache failed"
+    php artisan storage:link || echo "Storage link failed"
+    php artisan migrate --force || echo "Migrations failed"
+) &
 
-# Link de storage
-echo "Creando symlink de storage..."
-php artisan storage:link || echo "El link de storage ya existe o falló"
-
-echo "Iniciando PHP-FPM..."
+echo "Starting PHP-FPM..."
 php-fpm -D
 
-echo "Iniciando Nginx en puerto 8080..."
-# No usamos 'set -e' aquí para que el contenedor intente mantenerse vivo si nginx inicia
-nginx -g "daemon off;"
+echo "Starting Nginx..."
+# Create directory for pid file if needed
+mkdir -p /run/nginx
+nginx -t
+exec nginx -g "daemon off;"
