@@ -15,6 +15,7 @@ RUN apk add --no-cache \
     wget \
     mariadb-client \
     postgresql-dev \
+    libpq \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
@@ -46,14 +47,18 @@ COPY --from=assets-builder /app/public/build ./public/build
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
+# Set permissions for Laravel and Nginx
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data /var/lib/nginx \
+    && chown -R www-data:www-data /var/log/nginx \
+    && mkdir -p /run/nginx \
+    && chown -R www-data:www-data /run/nginx
 
 # Nginx configuration
 COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
 
-# Ensure Nginx runs as www-data to match PHP-FPM
+# Ensure Nginx runs as www-data
 RUN sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf || echo "User already set"
 
 # Startup script
