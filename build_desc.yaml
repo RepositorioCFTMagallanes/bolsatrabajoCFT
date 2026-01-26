@@ -1,0 +1,130 @@
+artifacts:
+  images:
+  - us-central1-docker.pkg.dev/portal-empleabilidad-cft/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+buildTriggerId: b01b762b-dd42-4b03-add2-a321458cbc23
+createTime: '2026-01-23T18:55:06.478796Z'
+finishTime: '2026-01-23T18:59:10.717535Z'
+id: d6193c7d-340d-4463-abca-0c8b97b57edb
+images:
+- us-central1-docker.pkg.dev/portal-empleabilidad-cft/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+logUrl: https://console.cloud.google.com/cloud-build/builds/d6193c7d-340d-4463-abca-0c8b97b57edb?project=287614110959
+name: projects/287614110959/locations/global/builds/d6193c7d-340d-4463-abca-0c8b97b57edb
+options:
+  dynamicSubstitutions: true
+  logging: CLOUD_LOGGING_ONLY
+  pool: {}
+  substitutionOption: ALLOW_LOOSE
+projectId: portal-empleabilidad-cft
+queueTtl: 3600s
+results:
+  buildStepImages:
+  - sha256:221c0c0d9a90f46f108bb888a1da9e99c82ff631e8b1c63b0223ea951752bd53
+  - sha256:f392861404fe6478c2340eceac2718dbb91a5c305c212afd4900b312a75d7d67
+  - sha256:0d19f566f418b8aa0109eba1d04db88e36e88d09559267b4559982d07c685a0b
+  buildStepOutputs:
+  - ''
+  - ''
+  - ''
+  images:
+  - artifactRegistryPackage: projects/portal-empleabilidad-cft/locations/us-central1/repositories/cloud-run-source-deploy/packages/bolsatrabajocft%2Fportal-empleabilidad/versions/sha256:7764d7c016bdd8be029444ebe5a4767e1459d4896ddafd3a0375f856f7cb145d
+    digest: sha256:7764d7c016bdd8be029444ebe5a4767e1459d4896ddafd3a0375f856f7cb145d
+    name: us-central1-docker.pkg.dev/portal-empleabilidad-cft/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+    pushTiming:
+      endTime: '2026-01-23T18:59:09.502265879Z'
+      startTime: '2026-01-23T18:59:08.522668813Z'
+serviceAccount: projects/portal-empleabilidad-cft/serviceAccounts/287614110959-compute@developer.gserviceaccount.com
+source:
+  gitSource:
+    revision: d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+    url: https://github.com/RepositorioCFTMagallanes/bolsatrabajoCFT.git
+sourceProvenance:
+  resolvedGitSource:
+    revision: d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+    url: https://github.com/RepositorioCFTMagallanes/bolsatrabajoCFT.git
+startTime: '2026-01-23T18:55:07.490913988Z'
+status: SUCCESS
+steps:
+- args:
+  - build
+  - us-central1-docker.pkg.dev/portal-empleabilidad-cft/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+  - --builder=gcr.io/buildpacks/builder:latest
+  - --network=cloudbuild
+  - --path=.
+  entrypoint: pack
+  id: Buildpack
+  name: gcr.io/k8s-skaffold/pack
+  pullTiming:
+    endTime: '2026-01-23T18:55:15.824855855Z'
+    startTime: '2026-01-23T18:55:13.675156671Z'
+  status: SUCCESS
+  timing:
+    endTime: '2026-01-23T18:57:05.759821004Z'
+    startTime: '2026-01-23T18:55:13.675156671Z'
+- args:
+  - push
+  - us-central1-docker.pkg.dev/portal-empleabilidad-cft/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+  id: Push
+  name: gcr.io/cloud-builders/docker
+  pullTiming:
+    endTime: '2026-01-23T18:57:05.764720047Z'
+    startTime: '2026-01-23T18:57:05.759906728Z'
+  status: SUCCESS
+  timing:
+    endTime: '2026-01-23T18:58:05.014318975Z'
+    startTime: '2026-01-23T18:57:05.759906728Z'
+- args:
+  - run
+  - services
+  - update
+  - portal-empleabilidad
+  - --platform=managed
+  - --image=us-central1-docker.pkg.dev/portal-empleabilidad-cft/cloud-run-source-deploy/bolsatrabajocft/portal-empleabilidad:d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+  - --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31,gcb-build-id=d6193c7d-340d-4463-abca-0c8b97b57edb,gcb-trigger-id=b01b762b-dd42-4b03-add2-a321458cbc23
+  - --region=us-central1
+  - --quiet
+  entrypoint: gcloud
+  id: Deploy
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  pullTiming:
+    endTime: '2026-01-23T18:58:49.800206190Z'
+    startTime: '2026-01-23T18:58:05.014414077Z'
+  status: SUCCESS
+  timing:
+    endTime: '2026-01-23T18:59:08.478098384Z'
+    startTime: '2026-01-23T18:58:05.014414077Z'
+substitutions:
+  BRANCH_NAME: main
+  COMMIT_SHA: d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+  REF_NAME: main
+  REPO_FULL_NAME: RepositorioCFTMagallanes/bolsatrabajoCFT
+  REPO_NAME: bolsatrabajocft
+  REVISION_ID: d3b8d937d01d4e52d586dbc1f1fe22bbc3cd2a31
+  SHORT_SHA: d3b8d93
+  TRIGGER_BUILD_CONFIG_PATH: ''
+  TRIGGER_NAME: rmgpgab-portal-empleabilidad-us-central1-RepositorioCFTMagalzpk
+  _AR_HOSTNAME: us-central1-docker.pkg.dev
+  _AR_PROJECT_ID: portal-empleabilidad-cft
+  _AR_REPOSITORY: cloud-run-source-deploy
+  _DEPLOY_REGION: us-central1
+  _PLATFORM: managed
+  _SERVICE_NAME: portal-empleabilidad
+  _TRIGGER_ID: b01b762b-dd42-4b03-add2-a321458cbc23
+tags:
+- gcp-cloud-build-deploy-cloud-run
+- gcp-cloud-build-deploy-cloud-run-managed
+- portal-empleabilidad
+- trigger-b01b762b-dd42-4b03-add2-a321458cbc23
+timeout: 3600s
+timing:
+  BUILD:
+    endTime: '2026-01-23T18:59:08.522540100Z'
+    startTime: '2026-01-23T18:55:13.064204206Z'
+  FETCHSOURCE:
+    endTime: '2026-01-23T18:55:13.063100444Z'
+    startTime: '2026-01-23T18:55:10.640098916Z'
+  GIT_SOURCE:
+    endTime: '2026-01-23T18:55:13.063100444Z'
+    startTime: '2026-01-23T18:55:10.640098916Z'
+  PUSH:
+    endTime: '2026-01-23T18:59:09.503433564Z'
+    startTime: '2026-01-23T18:59:08.522666230Z'

@@ -1,99 +1,70 @@
-# =====================================================
-# Imagen base: PHP 8.2 + Apache
-# =====================================================
-FROM php:8.2-apache
+# Stage 1: Build assets with Node
+FROM node:20-alpine AS assets-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+COPY . .
+RUN npm run build
 
-# =====================================================
-# Paquetes del sistema + extensiones PHP necesarias
-# (MySQL + PostgreSQL + Laravel)
-# =====================================================
-RUN apt-get update && apt-get install -y \
-    git unzip zip \
+# Stage 2: PHP App
+FROM php:8.2-fpm-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    nginx \
+    wget \
+    mariadb-client \
+    postgresql-dev \
+    libpq \
     libpng-dev \
-    libonig-dev \
-    libxml2-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     libzip-dev \
-    libpq-dev \
+    icu-dev \
+    oniguruma-dev \
+    linux-headers
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
-    pdo \
     pdo_mysql \
     pdo_pgsql \
-    mbstring \
+    gd \
+    zip \
+    intl \
     bcmath \
-    exif \
-    pcntl \
-    && a2enmod rewrite \
-    && rm -rf /var/lib/apt/lists/*
+    opcache
 
-# =====================================================
-# Composer (desde imagen oficial)
-# =====================================================
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# =====================================================
-# Directorio de trabajo
-# =====================================================
 WORKDIR /var/www/html
+COPY . .
 
-# =====================================================
-# Copiar código del proyecto
-# =====================================================
-COPY . /var/www/html
+# Copy built assets from Stage 1
+COPY --from=assets-builder /app/public/build ./public/build
 
-# =====================================================
-# Apache → DocumentRoot = /public
-# =====================================================
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+# Install Laravel dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/sites-available/*.conf \
-    /etc/apache2/apache2.conf \
-    /etc/apache2/conf-available/*.conf
+# Set permissions for Laravel and Nginx
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data /var/lib/nginx \
+    && chown -R www-data:www-data /var/log/nginx \
+    && mkdir -p /run/nginx \
+    && chown -R www-data:www-data /run/nginx
 
-# =====================================================
-# Permitir .htaccess (Laravel routing)
-# =====================================================
-RUN printf '<Directory ${APACHE_DOCUMENT_ROOT}>\n\
-    Options Indexes FollowSymLinks\n\
-    AllowOverride All\n\
-    Require all granted\n\
-    </Directory>\n' \
-    > /etc/apache2/conf-available/laravel.conf \
-    && a2enconf laravel
+# Nginx configuration
+COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
 
-# =====================================================
-# Instalar dependencias PHP del proyecto
-# =====================================================
-RUN composer install \
-    --no-dev \
-    --prefer-dist \
-    --no-progress \
-    --no-interaction \
-    --optimize-autoloader
+# Ensure Nginx runs as www-data
+RUN sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf || echo "User already set"
 
-# =====================================================
-# Limpiar cachés (IMPORTANTE para Render)
-# =====================================================
-RUN php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
-
-# =====================================================
-# Permisos correctos para Laravel
-# =====================================================
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
-
-# =====================================================
-# Apache escucha en 8080 (requerido por Render)
-# =====================================================
-RUN sed -i 's/80/8080/g' \
-    /etc/apache2/ports.conf \
-    /etc/apache2/sites-available/000-default.conf
+# Startup script
+COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8080
 
-# =====================================================
-# Arranque del servidor
-# =====================================================
-CMD ["apache2-foreground"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
