@@ -46,4 +46,5 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 # ==========================
 # COMANDO DEL JOB
 # ==========================
-CMD ["php", "artisan", "migrate", "--force"]
+CMD ["php", "/app/artisan", "migrate", "--force"]
+
