@@ -6,6 +6,8 @@ use App\Models\Estudiante;
 use App\Models\Postulacion;
 use Illuminate\Http\Request;
 use App\Services\OfertaRecommendationService;
+use Illuminate\Support\Facades\Log;
+
 
 
 class UsuarioController extends Controller
@@ -70,111 +72,133 @@ class UsuarioController extends Controller
     {
         $usuarioId = session('usuario_id');
 
-        // ===========================
-        // 1. OBTENER MODELOS
-        // ===========================
-        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
+        $estudiante = Estudiante::where('usuario_id', $usuarioId)->firstOrFail();
         $usuario = $estudiante->usuario;
 
-        // ===========================
-        // 2. VALIDAR DATOS
-        // ===========================
         $request->validate([
             'nombre'   => 'required|string|max:150',
             'apellido' => 'required|string|max:150',
             'email'    => 'required|email|max:150',
 
-            'run'            => 'nullable|string|max:20',
-            'estado'         => 'nullable|string|max:50',
-            'titulo'         => 'nullable|string|max:255',
-            'telefono'       => 'nullable|string|max:50',
-            'ciudad'         => 'nullable|string|max:150',
-            'resumen'        => 'nullable|string|max:800',
-            'institucion'    => 'nullable|string|max:255',
-            'anio_egreso'    => 'nullable|integer|min:1990|max:2099',
-            'cursos'         => 'nullable|string',
+            'run'         => 'nullable|string|max:20',
+            'estado'      => 'nullable|string|max:50',
+            'titulo'      => 'nullable|string|max:255',
+            'telefono'    => 'nullable|string|max:50',
+            'ciudad'      => 'nullable|string|max:150',
+            'resumen'     => 'nullable|string|max:800',
+            'institucion' => 'nullable|string|max:255',
+            'anio_egreso' => 'nullable|integer|min:1990|max:2099',
+            'cursos'      => 'nullable|string',
 
-            'linkedin'       => 'nullable|url|max:255',
-            'portfolio'      => 'nullable|url|max:255',
+            'linkedin'  => 'nullable|url|max:255',
+            'portfolio' => 'nullable|url|max:255',
 
-            'area'           => 'nullable|integer',
-            'jornada'        => 'nullable|integer',
-            'modalidad'      => 'nullable|integer',
+            'area'      => 'nullable|integer',
+            'jornada'   => 'nullable|integer',
+            'modalidad' => 'nullable|integer',
 
-            // Archivos
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'cv'     => 'nullable|mimes:pdf|max:4096',
         ]);
 
         // ===========================
-        // 3. ACTUALIZAR USUARIO
+        // USUARIO
         // ===========================
-        $usuario->nombre   = $request->nombre;
-        $usuario->apellido = $request->apellido;
-        $usuario->email    = $request->email;
-        $usuario->save();
+        $usuario->update([
+            'nombre'   => $request->nombre,
+            'apellido' => $request->apellido,
+            'email'    => $request->email,
+        ]);
 
         // ===========================
-        // 4. ACTUALIZAR ESTUDIANTE
+        // ESTUDIANTE
         // ===========================
-        $estudiante->run                     = $request->run;
-        $estudiante->estado_carrera         = $request->estado;
-        $estudiante->carrera                = $request->titulo;
-        $estudiante->telefono               = $request->telefono;
-        $estudiante->ciudad                 = $request->ciudad;
-        $estudiante->resumen                = $request->resumen;
-        $estudiante->institucion            = $request->institucion;
-        $estudiante->anio_egreso            = $request->anio_egreso;
-        $estudiante->cursos                 = $request->cursos;
-
-        $estudiante->linkedin_url           = $request->linkedin;
-        $estudiante->portfolio_url          = $request->portfolio;
-
-        $estudiante->area_interes_id        = $request->area;
-        $estudiante->jornada_preferencia_id = $request->jornada;
-        $estudiante->modalidad_preferencia_id = $request->modalidad;
+        $estudiante->fill([
+            'run'                     => $request->run,
+            'estado_carrera'          => $request->estado,
+            'carrera'                 => $request->titulo,
+            'telefono'                => $request->telefono,
+            'ciudad'                  => $request->ciudad,
+            'resumen'                 => $request->resumen,
+            'institucion'             => $request->institucion,
+            'anio_egreso'             => $request->anio_egreso,
+            'cursos'                  => $request->cursos,
+            'linkedin_url'            => $request->linkedin,
+            'portfolio_url'           => $request->portfolio,
+            'area_interes_id'         => $request->area,
+            'jornada_preferencia_id'  => $request->jornada,
+            'modalidad_preferencia_id' => $request->modalidad,
+        ]);
 
         // ===========================
-        // 5. MANEJO DE AVATAR
+        // AVATAR
         // ===========================
-        if ($request->hasFile('avatar')) {
+        try {
+            if ($request->hasFile('avatar')) {
 
-            // borrar avatar anterior
-            if ($estudiante->avatar && file_exists(public_path($estudiante->avatar))) {
-                unlink(public_path($estudiante->avatar));
+                // eliminar avatar previo (seguro)
+                if ($estudiante->avatar) {
+                    $ruta = public_path($estudiante->avatar);
+                    if (is_file($ruta)) {
+                        @unlink($ruta);
+                    }
+                }
+
+                $destino = public_path('uploads/avatars');
+                if (!is_dir($destino)) {
+                    mkdir($destino, 0775, true);
+                }
+
+                $archivo = $request->file('avatar');
+                $nombre = uniqid('avatar_') . '.' . $archivo->getClientOriginalExtension();
+                $archivo->move($destino, $nombre);
+
+                $estudiante->avatar = 'uploads/avatars/' . $nombre;
             }
-
-            $archivo = $request->file('avatar');
-            $nombre = uniqid() . '.' . $archivo->getClientOriginalExtension();
-            $archivo->move(public_path('uploads/avatars'), $nombre);
-
-            $estudiante->avatar = 'uploads/avatars/' . $nombre;
+        } catch (\Throwable $e) {
+            Log::error('Error subiendo avatar', [
+                'error' => $e->getMessage(),
+            ]);
+            return back()->withErrors('Error al subir la foto de perfil');
         }
 
         // ===========================
-        // 6. MANEJO DE CV
+        // CV
         // ===========================
-        if ($request->hasFile('cv')) {
+        try {
+            if ($request->hasFile('cv')) {
 
-            // borrar CV anterior
-            if ($estudiante->ruta_cv && file_exists(public_path($estudiante->ruta_cv))) {
-                unlink(public_path($estudiante->ruta_cv));
+                if ($estudiante->ruta_cv) {
+                    $ruta = public_path($estudiante->ruta_cv);
+                    if (is_file($ruta)) {
+                        @unlink($ruta);
+                    }
+                }
+
+                $destino = public_path('uploads/cv');
+                if (!is_dir($destino)) {
+                    mkdir($destino, 0775, true);
+                }
+
+                $archivo = $request->file('cv');
+                $nombre = time() . '_' . preg_replace('/\s+/', '_', $archivo->getClientOriginalName());
+                $archivo->move($destino, $nombre);
+
+                $estudiante->ruta_cv = 'uploads/cv/' . $nombre;
             }
-
-            $archivo = $request->file('cv');
-            $nombre = time() . '_' . $archivo->getClientOriginalName();
-            $archivo->move(public_path('uploads/cv'), $nombre);
-
-            $estudiante->ruta_cv = 'uploads/cv/' . $nombre;
+        } catch (\Throwable $e) {
+            Log::error('Error subiendo CV', [
+                'error' => $e->getMessage(),
+            ]);
+            return back()->withErrors('Error al subir el CV');
         }
 
         $estudiante->save();
 
-        // ===========================
-        // 7. REDIRIGIR
-        // ===========================
-        return redirect('/usuarios/perfil')->with('success', 'Perfil actualizado correctamente.');
+        return redirect('/usuarios/perfil')
+            ->with('success', 'Perfil actualizado correctamente.');
     }
+
 
     /**
      * LISTA DE POSTULACIONES DEL USUARIO
