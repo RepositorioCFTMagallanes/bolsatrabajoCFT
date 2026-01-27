@@ -1,0 +1,301 @@
+steps:
+  # Step 1: Execute SQL initialization
+  - name: 'postgres:15'
+    env:
+      - 'PGHOST=/cloudsql/sgai-cft-2026:us-central1:sgai-postgres'
+      - 'PGDATABASE=portal_empleabilidad'
+      - 'PGUSER=postgres'
+    script: |
+      #!/bin/bash
+      # Wait for Cloud SQL proxy to be ready
+      sleep 5
+      
+      # Execute the initialization script
+      psql << 'EOSQL'
+      -- Drop all existing tables if they exist (in correct order due to foreign keys)
+      DROP TABLE IF EXISTS recursos_empleabilidad CASCADE;
+      DROP TABLE IF EXISTS ofertas_favoritas CASCADE;
+      DROP TABLE IF EXISTS postulaciones CASCADE;
+      DROP TABLE IF EXISTS ofertas_trabajo CASCADE;
+      DROP TABLE IF EXISTS experiencias_estudiante CASCADE;
+      DROP TABLE IF EXISTS estudiantes CASCADE;
+      DROP TABLE IF EXISTS empresas CASCADE;
+      DROP TABLE IF EXISTS tipos_contrato CASCADE;
+      DROP TABLE IF EXISTS modalidades CASCADE;
+      DROP TABLE IF EXISTS jornadas CASCADE;
+      DROP TABLE IF EXISTS tamanos_empresa CASCADE;
+      DROP TABLE IF EXISTS rubros CASCADE;
+      DROP TABLE IF EXISTS areas_empleo CASCADE;
+      DROP TABLE IF EXISTS usuarios CASCADE;
+      DROP TABLE IF EXISTS roles CASCADE;
+
+      -- Create roles table
+      CREATE TABLE roles (
+          id SMALLSERIAL PRIMARY KEY,
+          nombre VARCHAR(50) UNIQUE NOT NULL,
+          descripcion VARCHAR(255)
+      );
+
+      -- Create usuarios table
+      CREATE TABLE usuarios (
+          id BIGSERIAL PRIMARY KEY,
+          rol_id SMALLINT NOT NULL,
+          rut VARCHAR(20),
+          nombre VARCHAR(100) NOT NULL,
+          apellido VARCHAR(255),
+          email VARCHAR(150) UNIQUE NOT NULL,
+          contrasena VARCHAR(255) NOT NULL,
+          email_verificado_en TIMESTAMP,
+          token_recordar VARCHAR(100),
+          creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TIMESTAMP,
+          FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE RESTRICT
+      );
+
+      -- Create catalog tables
+      CREATE TABLE areas_empleo (
+          id BIGSERIAL PRIMARY KEY,
+          nombre VARCHAR(100) UNIQUE NOT NULL
+      );
+
+      CREATE TABLE rubros (
+          id BIGSERIAL PRIMARY KEY,
+          nombre VARCHAR(100) UNIQUE NOT NULL
+      );
+
+      CREATE TABLE tamanos_empresa (
+          id BIGSERIAL PRIMARY KEY,
+          nombre VARCHAR(50) UNIQUE NOT NULL
+      );
+
+      CREATE TABLE jornadas (
+          id BIGSERIAL PRIMARY KEY,
+          nombre VARCHAR(100) UNIQUE NOT NULL
+      );
+
+      CREATE TABLE modalidades (
+          id BIGSERIAL PRIMARY KEY,
+          nombre VARCHAR(100) UNIQUE NOT NULL
+      );
+
+      CREATE TABLE tipos_contrato (
+          id BIGSERIAL PRIMARY KEY,
+          nombre VARCHAR(100) UNIQUE NOT NULL
+      );
+
+      -- Create empresas table
+      CREATE TABLE empresas (
+          id BIGSERIAL PRIMARY KEY,
+          usuario_id BIGINT UNIQUE NOT NULL,
+          ruta_logo VARCHAR(255),
+          nombre_comercial VARCHAR(255),
+          razon_social VARCHAR(150),
+          rut VARCHAR(20),
+          rubro_id BIGINT,
+          tamano_id BIGINT,
+          correo_contacto VARCHAR(150) NOT NULL,
+          telefono_contacto VARCHAR(50) NOT NULL,
+          sitio_web VARCHAR(255),
+          region VARCHAR(100),
+          ciudad VARCHAR(100),
+          direccion VARCHAR(255),
+          descripcion TEXT,
+          linkedin VARCHAR(255),
+          instagram VARCHAR(255),
+          facebook VARCHAR(255),
+          recepcion_postulaciones VARCHAR(20) DEFAULT 'plataforma' CHECK (recepcion_postulaciones IN ('plataforma', 'correo', 'url')),
+          correo_postulaciones VARCHAR(150),
+          url_postulaciones VARCHAR(255),
+          mostrar_sueldo BOOLEAN DEFAULT TRUE,
+          mostrar_logo BOOLEAN DEFAULT TRUE,
+          nombre_representante VARCHAR(150),
+          cargo_representante VARCHAR(150),
+          correo_representante VARCHAR(150),
+          creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+          FOREIGN KEY (rubro_id) REFERENCES rubros(id) ON DELETE SET NULL,
+          FOREIGN KEY (tamano_id) REFERENCES tamanos_empresa(id) ON DELETE SET NULL
+      );
+
+      -- Create estudiantes table
+      CREATE TABLE estudiantes (
+          id BIGSERIAL PRIMARY KEY,
+          usuario_id BIGINT UNIQUE NOT NULL,
+          run VARCHAR(20),
+          estado_carrera VARCHAR(50),
+          carrera VARCHAR(150),
+          telefono VARCHAR(50),
+          ciudad VARCHAR(100),
+          resumen TEXT,
+          institucion VARCHAR(150),
+          anio_egreso INTEGER,
+          cursos TEXT,
+          ruta_cv VARCHAR(255),
+          linkedin_url VARCHAR(255),
+          portfolio_url VARCHAR(255),
+          avatar VARCHAR(255),
+          area_interes_id BIGINT,
+          jornada_preferencia_id BIGINT,
+          modalidad_preferencia_id BIGINT,
+          visibilidad VARCHAR(10) DEFAULT 'publico' CHECK (visibilidad IN ('publico', 'privado')),
+          frecuencia_alertas VARCHAR(10) DEFAULT 'diario' CHECK (frecuencia_alertas IN ('diario', 'semanal', 'ninguna')),
+          creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+          FOREIGN KEY (area_interes_id) REFERENCES areas_empleo(id) ON DELETE SET NULL,
+          FOREIGN KEY (jornada_preferencia_id) REFERENCES jornadas(id) ON DELETE SET NULL,
+          FOREIGN KEY (modalidad_preferencia_id) REFERENCES modalidades(id) ON DELETE SET NULL
+      );
+
+      -- Create experiencias_estudiante table
+      CREATE TABLE experiencias_estudiante (
+          id BIGSERIAL PRIMARY KEY,
+          estudiante_id BIGINT NOT NULL,
+          puesto VARCHAR(150) NOT NULL,
+          empresa VARCHAR(150) NOT NULL,
+          periodo VARCHAR(50),
+          descripcion TEXT,
+          creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE
+      );
+
+      -- Create ofertas_trabajo table
+      CREATE TABLE ofertas_trabajo (
+          id BIGSERIAL PRIMARY KEY,
+          empresa_id BIGINT NOT NULL,
+          titulo VARCHAR(150) NOT NULL,
+          area_id BIGINT NOT NULL,
+          tipo_contrato_id BIGINT NOT NULL,
+          modalidad_id BIGINT NOT NULL,
+          jornada_id BIGINT,
+          vacantes INTEGER DEFAULT 1,
+          fecha_cierre DATE,
+          region VARCHAR(100),
+          ciudad VARCHAR(100),
+          direccion VARCHAR(255),
+          sueldo_min DECIMAL(12, 2),
+          sueldo_max DECIMAL(12, 2),
+          mostrar_sueldo BOOLEAN DEFAULT TRUE,
+          beneficios TEXT,
+          descripcion TEXT NOT NULL,
+          requisitos TEXT NOT NULL,
+          habilidades_deseadas TEXT,
+          ruta_archivo VARCHAR(255),
+          nombre_contacto VARCHAR(150) NOT NULL,
+          correo_contacto VARCHAR(150) NOT NULL,
+          telefono_contacto VARCHAR(50),
+          estado BOOLEAN DEFAULT FALSE,
+          motivo_rechazo TEXT,
+          revisada_en TIMESTAMP,
+          creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+          FOREIGN KEY (area_id) REFERENCES areas_empleo(id) ON DELETE RESTRICT,
+          FOREIGN KEY (tipo_contrato_id) REFERENCES tipos_contrato(id) ON DELETE RESTRICT,
+          FOREIGN KEY (modalidad_id) REFERENCES modalidades(id) ON DELETE RESTRICT,
+          FOREIGN KEY (jornada_id) REFERENCES jornadas(id) ON DELETE SET NULL
+      );
+
+      -- Create postulaciones table
+      CREATE TABLE postulaciones (
+          id BIGSERIAL PRIMARY KEY,
+          estudiante_id BIGINT NOT NULL,
+          oferta_id BIGINT NOT NULL,
+          estado_postulacion VARCHAR(50) DEFAULT 'pendiente',
+          fecha_postulacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          notas TEXT,
+          creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (estudiante_id, oferta_id),
+          FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE,
+          FOREIGN KEY (oferta_id) REFERENCES ofertas_trabajo(id) ON DELETE CASCADE
+      );
+
+      -- Create ofertas_favoritas table
+      CREATE TABLE ofertas_favoritas (
+          id BIGSERIAL PRIMARY KEY,
+          estudiante_id BIGINT NOT NULL,
+          oferta_id BIGINT NOT NULL,
+          fecha_guardado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (estudiante_id, oferta_id),
+          FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE,
+          FOREIGN KEY (oferta_id) REFERENCES ofertas_trabajo(id) ON DELETE CASCADE
+      );
+
+      -- Create recursos_emplea bilidad table
+      CREATE TABLE recursos_empleabilidad (
+          id BIGSERIAL PRIMARY KEY,
+          titulo VARCHAR(255) NOT NULL,
+          resumen VARCHAR(250),
+          contenido TEXT,
+          imagen VARCHAR(255),
+          estado BOOLEAN DEFAULT FALSE,
+          creado_en TIMESTAMP,
+          actualizado_en TIMESTAMP,
+          eliminado_en TIMESTAMP
+      );
+
+      -- Insert catalog data
+      INSERT INTO roles (id, nombre, descripcion) VALUES
+      (1, 'administrador', 'Acceso completo al sistema'),
+      (2, 'empresa', 'Usuario empresa que publica ofertas'),
+      (3, 'estudiante', 'Usuario postulante/estudiante');
+
+      INSERT INTO areas_empleo (id, nombre) VALUES
+      (1, 'Industrial'),
+      (2, 'Salud'),
+      (3, 'Turismo'),
+      (4, 'Administración'),
+      (5, 'TI / Informática'),
+      (6, 'Educación'),
+      (7, 'Logística');
+
+      INSERT INTO rubros (id, nombre) VALUES
+      (1, 'Construcción'),
+      (2, 'Industrial'),
+      (3, 'Salud'),
+      (4, 'Educación'),
+      (5, 'Servicios'),
+      (6, 'Turismo'),
+      (7, 'Administración'),
+      (8, 'TI / Informática');
+
+      INSERT INTO tamanos_empresa (id, nombre) VALUES
+      (1, '1-10'),
+      (2, '11-50'),
+      (3, '51-200'),
+      (4, '201-500'),
+      (5, '500+');
+
+      INSERT INTO jornadas (id, nombre) VALUES
+      (1, 'Tiempo completo'),
+      (2, 'Part-time'),
+      (3, 'Turnos');
+
+      INSERT INTO modalidades (id, nombre) VALUES
+      (1, 'Presencial'),
+      (2, 'Remoto'),
+      (3, 'Híbrido');
+
+      INSERT INTO tipos_contrato (id, nombre) VALUES
+      (1, 'Plazo fijo'),
+      (2, 'Indefinido'),
+      (3, 'Práctica'),
+      (4, 'Honorarios');
+
+      -- Insert admin user (password: 12345678)
+      INSERT INTO usuarios (id, rol_id, rut, nombre, apellido, email, contrasena, email_verificado_en, token_recordar) VALUES
+      (7, 1, NULL, 'admin', 'admin', 'admin@cft.cl', '\$2y\$12\$OQojOMvgO.n9ShaENOH2WO4iM84vTgGDtIMi5pu0pdDSmbIPqlLYK', NULL, NULL);
+
+      EOSQL
+      
+      echo "Database initialization complete!"
+
+timeout: 300s
+options:
+  logging: CL
+
+OUD_LOGGING_ONLY
