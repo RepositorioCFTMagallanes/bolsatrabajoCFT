@@ -55,11 +55,12 @@ RUN chown -R www-data:www-data /var/www/html \
     && mkdir -p /run/nginx \
     && chown -R www-data:www-data /run/nginx
 
-# Nginx configuration
-COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
+# =====================================================
+# Permisos correctos para Laravel
+# =====================================================
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# Ensure Nginx runs as www-data
-RUN sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf || echo "User already set"
 
 # Startup script
 COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
