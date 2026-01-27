@@ -46,5 +46,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 # ==========================
 # COMANDO DEL JOB
 # ==========================
-CMD ["php", "/app/artisan", "migrate", "--force"]
+CMD ["sh", "-c", "pwd && ls -la && ls -la /app && ls -la /app/artisan || echo ARTISAN_NO_EXISTE"]
+
 
