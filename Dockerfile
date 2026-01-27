@@ -72,13 +72,6 @@ RUN composer install \
     --optimize-autoloader
 
 # =====================================================
-# Limpiar cachés (IMPORTANTE para Render)
-# =====================================================
-RUN php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
-
-# =====================================================
 # Permisos correctos para Laravel
 # =====================================================
 RUN chown -R www-data:www-data storage bootstrap/cache \
