@@ -70,16 +70,7 @@ RUN composer install \
     --no-progress \
     --no-interaction \
     --optimize-autoloader
-
-
-# =====================================================
-# Limpieza de cache Laravel (CRÍTICO en Cloud Run)
-# =====================================================
-RUN php artisan config:clear \
- && php artisan cache:clear \
- && php artisan route:clear \
- && php artisan view:clear
- 
+    
 # =====================================================
 # Permisos correctos para Laravel
 # =====================================================
