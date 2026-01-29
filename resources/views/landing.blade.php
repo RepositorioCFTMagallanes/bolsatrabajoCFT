@@ -27,7 +27,7 @@
     <!-- Trabajos destacados -->
     <section class="featured_jobs">
         <div class="container">
-            <h2>Trabajos Destacados</h2>
+            <h2>Trabajos Destacados PRUEBA</h2>
 
             <div class="jobs-grid">
 
