@@ -65,7 +65,7 @@
     <!-- Empresas destacadas -->
     <section class="featured-companies">
         <div class="container">
-            <h2>Empresas destacadas</h2>
+            <h2>Empresas Destacadas</h2>
             <p class="subtitle">
                 Las empresas más atractivas para trabajar están reclutando talentos como
                 tú
