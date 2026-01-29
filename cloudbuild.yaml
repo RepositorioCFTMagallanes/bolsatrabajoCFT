@@ -68,5 +68,5 @@ substitutions:
   _AR_HOSTNAME: us-central1-docker.pkg.dev
   _AR_PROJECT_ID: portal-empleabilidad-cft
   _AR_REPOSITORY: cloud-run
-  _SERVICE_NAME: bolsatrabajo
+  _SERVICE_NAME: portal-empleabilidad
   _DEPLOY_REGION: us-central1
