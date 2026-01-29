@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use App\Services\BrevoMailService;
-
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -58,6 +58,7 @@ class AuthController extends Controller
             'usuario_rol'    => $usuario->rol_id,   // <-- FIX CORRECTO (NO CAMBIAR POR NOMBRE)
             'autenticado'    => true,
         ]);
+        Auth::loginUsingId($usuario->id);
 
 
         // ============================================================
@@ -76,8 +77,10 @@ class AuthController extends Controller
     /* ============================================================
        LOGOUT
     ============================================================ */
+    
     public function logout()
     {
+        Auth::logout();
         Session::flush();
         session()->forget('url.intended');
         return redirect('/login');
