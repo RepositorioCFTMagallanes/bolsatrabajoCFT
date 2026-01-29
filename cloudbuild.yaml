@@ -1,21 +1,35 @@
 steps:
+  # ===============================
   # Build the container image
+  # ===============================
   - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build', 
-      '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA', 
-      '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:latest', 
-      '.'
-    ]
+    args:
+      - 'build'
+      - '-t'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
+      - '-t'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+      - '.'
 
-  # Push the container image to Artifact Registry
+  # ===============================
+  # Push image (commit SHA)
+  # ===============================
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA']
+    args:
+      - 'push'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
 
+  # ===============================
+  # Push image (latest)
+  # ===============================
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:latest']
+    args:
+      - 'push'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
 
+  # ===============================
   # Deploy to Cloud Run
+  # ===============================
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
@@ -23,7 +37,7 @@ steps:
       - 'deploy'
       - '${_SERVICE_NAME}'
       - '--image'
-      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
       - '--region'
       - '${_DEPLOY_REGION}'
       - '--set-cloudsql-instances'
@@ -31,21 +45,28 @@ steps:
       - '--set-env-vars'
       - 'DB_HOST=/cloudsql/${_AR_PROJECT_ID}:${_DEPLOY_REGION}:empleabilidad-db,APP_ENV=production,APP_DEBUG=false'
       - '--update-secrets'
-      - '/app/secrets/laravel-env=laravel-env:latest'
+      - 'laravel-env=laravel-env:latest'
       - '--allow-unauthenticated'
 
+# ===============================
+# Images built by this pipeline
+# ===============================
 images:
-  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA'
-  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:latest'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
 
+# ===============================
+# Build options
+# ===============================
 options:
   logging: CLOUD_LOGGING_ONLY
 
+# ===============================
+# Substitution variables
+# ===============================
 substitutions:
   _AR_HOSTNAME: us-central1-docker.pkg.dev
   _AR_PROJECT_ID: portal-empleabilidad-cft
   _AR_REPOSITORY: cloudrun
   _SERVICE_NAME: bolsatrabajo
   _DEPLOY_REGION: us-central1
-
-
