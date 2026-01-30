@@ -27,9 +27,15 @@
                     <div class="field">
                         <label for="avatar">Foto de perfil</label>
                         <div class="avatar-row">
-                            <img class="avatar-preview"
-                                src="{{ $estudiante->avatar ? asset($estudiante->avatar) : asset('img/testimonios/test (2).png') }}"
-                                alt="Avatar actual">
+                            @php
+                                $avatar =
+                                    $estudiante->avatar && file_exists(public_path($estudiante->avatar))
+                                        ? asset($estudiante->avatar)
+                                        : asset('img/testimonios/test (2).png');
+                            @endphp
+
+                            <img class="avatar-preview" src="{{ $avatar }}" alt="Avatar actual">
+
                             <div class="avatar-actions">
                                 <input type="file" id="avatar" name="avatar" accept="image/*">
                                 <p class="hint">Formatos: JPG o PNG, máx. 2MB.</p>
@@ -41,11 +47,11 @@
                             <div class="field">
                                 <label for="nombre">Nombre</label>
                                 <input id="nombre" name="nombre" type="text"
-                                    value="{{ $estudiante->usuario->nombre }}">
+                                    value="{{ optional($estudiante->usuario)->nombre }}">
                                 <div class="field">
                                     <label for="apellido">Apellido</label>
                                     <input id="apellido" name="apellido" type="text"
-                                        value="{{ $estudiante->usuario->apellido }}">
+                                        value="{{ optional($estudiante->usuario)->apellido }}">
                                 </div>
                             </div>
                             <div class="field">
@@ -84,7 +90,8 @@
                 <div class="grid-3">
                     <div class="field">
                         <label for="email">Correo</label>
-                        <input id="email" name="email" type="email" value="{{ $estudiante->usuario->email }}">
+                        <input id="email" name="email" type="email"
+                            value="{{ optional($estudiante->usuario)->email }}">
                     </div>
                     <div class="field">
                         <label for="telefono">Teléfono</label>
