@@ -95,6 +95,16 @@ class UsuarioController extends Controller
 
         $usuario = $estudiante->usuario;
 
+        if (!$usuario) {
+            Log::error('Usuario asociado no encontrado (posible soft delete)', [
+                'usuario_id' => $usuarioId,
+            ]);
+
+            return redirect()->route('usuarios.perfil')
+                ->withErrors('No se pudo actualizar el perfil del usuario.');
+        }
+
+
 
         $request->validate([
             'nombre'   => 'required|string|max:150',
