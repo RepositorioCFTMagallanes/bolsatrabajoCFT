@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Estudiante;
 use App\Models\Postulacion;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use App\Services\OfertaRecommendationService;
 use Illuminate\Support\Facades\Log;
-
-
 
 class UsuarioController extends Controller
 {
@@ -20,17 +19,23 @@ class UsuarioController extends Controller
         $usuarioId = session('usuario_id');
 
         if (!$usuarioId || !is_numeric($usuarioId)) {
+            Log::warning('perfil(): sesión inválida', ['usuario_id' => $usuarioId]);
             return redirect()->route('login');
         }
 
-        $estudiante = Estudiante::where('usuario_id', (int)$usuarioId)->first();
+        $usuarioId = (int) $usuarioId;
 
-        // ✅ Igual que empresas: si no existe, manda a editar
+        // Cargar estudiante
+        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
+
+        // ✅ Si no existe estudiante, NO hacemos loop: lo mandamos a editar
+        // (editar() se encarga de crear el registro si no existe)
         if (!$estudiante) {
             return redirect()->route('usuarios.editar')
                 ->with('error', 'Debes completar tu perfil para continuar.');
         }
 
+        // Cargar postulaciones
         $postulaciones = Postulacion::with(['oferta.empresa'])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('fecha_postulacion', 'desc')
@@ -42,6 +47,7 @@ class UsuarioController extends Controller
             ->where('estado_postulacion', '!=', 'Postulado')
             ->count();
 
+        // Recomendadas
         $ofertasRecomendadas = $service->getRecomendadas($estudiante);
         $totalOfertasRecomendadas = $ofertasRecomendadas->count();
 
@@ -55,8 +61,6 @@ class UsuarioController extends Controller
         ]);
     }
 
-
-
     /**
      * FORMULARIO PARA EDITAR PERFIL
      */
@@ -65,62 +69,97 @@ class UsuarioController extends Controller
         $usuarioId = session('usuario_id');
 
         if (!$usuarioId || !is_numeric($usuarioId)) {
-            Log::error('Sesion invalida en editar perfil', [
+            Log::error('editar(): sesión inválida', [
                 'usuario_id' => $usuarioId,
                 'session' => session()->all(),
             ]);
             return redirect()->route('login');
         }
 
+        $usuarioId = (int) $usuarioId;
+
+        // ✅ Intentar cargar estudiante con usuario
         $estudiante = Estudiante::with('usuario')
-            ->where('usuario_id', (int) $usuarioId)
+            ->where('usuario_id', $usuarioId)
             ->first();
 
+        // ✅ Si NO existe, lo creamos (evita loop + deja el sistema estable)
         if (!$estudiante) {
-            Log::error('Estudiante no encontrado en editar perfil', [
-                'usuario_id' => (int) $usuarioId,
-            ]);
-            return redirect()->route('usuarios.perfil')
-                ->withErrors('No se pudo cargar el perfil del usuario.');
+            Log::warning('editar(): estudiante no existe, creando vacío', ['usuario_id' => $usuarioId]);
+
+            $estudiante = new Estudiante();
+            $estudiante->usuario_id = $usuarioId;
+
+            // Si tienes defaults/constraints en DB, acá puedes setearlos:
+            // $estudiante->visibilidad = $estudiante->visibilidad ?? 'publico';
+            // $estudiante->frecuencia_alertas = $estudiante->frecuencia_alertas ?? 'diario';
+
+            $estudiante->save();
+
+            // recarga con relación
+            $estudiante->load('usuario');
         }
 
+        // ✅ Asegurar usuario asociado (sin loops)
         if (!$estudiante->usuario) {
-            Log::error('Usuario asociado no encontrado en editar perfil', [
-                'usuario_id' => (int) $usuarioId,
-            ]);
-            return redirect()->route('usuarios.perfil')
-                ->withErrors('No se pudo cargar el usuario del perfil.');
+            // Intentar recuperar usuario directo (por si el with() falló o la relación no se resolvió)
+            $usuario = Usuario::find($usuarioId);
+
+            if (!$usuario) {
+                Log::error('editar(): usuario asociado no existe', ['usuario_id' => $usuarioId]);
+                return redirect()->route('login')
+                    ->withErrors('No se pudo cargar el usuario. Vuelve a iniciar sesión.');
+            }
+
+            // Si la relación existe, esto ya queda bien al volver a cargar vista
+            // (No es necesario guardar nada aquí)
+            $estudiante->setRelation('usuario', $usuario);
         }
 
         return view('users.editar', compact('estudiante'));
     }
 
-
+    /**
+     * UPDATE PERFIL
+     */
     public function update(Request $request)
     {
         $usuarioId = session('usuario_id');
 
         if (!$usuarioId || !is_numeric($usuarioId)) {
-            Log::error('Sesion invalida en update perfil', [
+            Log::error('update(): sesión inválida', [
                 'usuario_id' => $usuarioId,
                 'session' => session()->all(),
             ]);
             return redirect()->route('login');
         }
 
+        $usuarioId = (int) $usuarioId;
+
+        // Cargar estudiante + usuario
         $estudiante = Estudiante::with('usuario')
-            ->where('usuario_id', (int)$usuarioId)
+            ->where('usuario_id', $usuarioId)
             ->first();
 
-        if (!$estudiante || !$estudiante->usuario) {
-            Log::error('Estudiante/Usuario no encontrado en update perfil', [
-                'usuario_id' => (int)$usuarioId,
-            ]);
-            return redirect()->route('usuarios.perfil')
-                ->withErrors('No se pudo actualizar el perfil.');
+        // ✅ Si no existe estudiante, lo creamos (blindaje total)
+        if (!$estudiante) {
+            Log::warning('update(): estudiante no existe, creando vacío', ['usuario_id' => $usuarioId]);
+            $estudiante = new Estudiante();
+            $estudiante->usuario_id = $usuarioId;
+            $estudiante->save();
+            $estudiante->load('usuario');
         }
 
-        // ✅ NO obligatorios: "sometimes" valida solo si viene el campo
+        // ✅ Usuario asociado
+        $usuario = $estudiante->usuario ?: Usuario::find($usuarioId);
+
+        if (!$usuario) {
+            Log::error('update(): usuario no encontrado', ['usuario_id' => $usuarioId]);
+            return redirect()->route('login')
+                ->withErrors('No se pudo actualizar el perfil. Inicia sesión nuevamente.');
+        }
+
+        // ✅ Validación NO obligatoria
         $request->validate([
             'nombre'   => 'sometimes|nullable|string|max:150',
             'apellido' => 'sometimes|nullable|string|max:150',
@@ -139,7 +178,7 @@ class UsuarioController extends Controller
             'linkedin'  => 'sometimes|nullable|url|max:255',
             'portfolio' => 'sometimes|nullable|url|max:255',
 
-            // ✅ Evita FK violation
+            // ✅ Evita FK violations (y deja null si viene vacío)
             'area'      => 'sometimes|nullable|integer|exists:areas_empleo,id',
             'jornada'   => 'sometimes|nullable|integer|exists:jornadas,id',
             'modalidad' => 'sometimes|nullable|integer|exists:modalidades,id',
@@ -148,39 +187,48 @@ class UsuarioController extends Controller
             'cv'     => 'sometimes|nullable|mimes:pdf|max:4096',
         ]);
 
-        $usuario = $estudiante->usuario;
-
-        // ✅ Si no mandan nombre/apellido/email, no los tocamos
+        // ===========================
+        // USUARIO: actualizar solo si viene
+        // ===========================
         $usuarioData = [];
-        if ($request->filled('nombre'))   $usuarioData['nombre']   = $request->nombre;
-        if ($request->filled('apellido')) $usuarioData['apellido'] = $request->apellido;
-        if ($request->filled('email'))    $usuarioData['email']    = $request->email;
 
+        if ($request->has('nombre'))   $usuarioData['nombre']   = $request->input('nombre');
+        if ($request->has('apellido')) $usuarioData['apellido'] = $request->input('apellido');
+        if ($request->has('email'))    $usuarioData['email']    = $request->input('email');
+
+        // OJO: has() permite setear null si envías vacío; si quieres NO tocar cuando viene vacío,
+        // cambia a filled(). Pero tú pediste no obligatorios, así que esto está bien.
         if (!empty($usuarioData)) {
             $usuario->update($usuarioData);
         }
 
-        // ✅ Normaliza "" -> null (para selects vacíos)
-        $area      = $request->filled('area') ? (int)$request->area : null;
-        $jornada   = $request->filled('jornada') ? (int)$request->jornada : null;
-        $modalidad = $request->filled('modalidad') ? (int)$request->modalidad : null;
+        // ===========================
+        // ESTUDIANTE
+        // ===========================
+        $area      = $request->filled('area') ? (int) $request->input('area') : null;
+        $jornada   = $request->filled('jornada') ? (int) $request->input('jornada') : null;
+        $modalidad = $request->filled('modalidad') ? (int) $request->input('modalidad') : null;
 
         $estudiante->fill([
-            'run'                      => $request->input('run'),
-            'estado_carrera'           => $request->input('estado'),
-            'carrera'                  => $request->input('titulo'),
-            'telefono'                 => $request->input('telefono'),
-            'ciudad'                   => $request->input('ciudad'),
-            'resumen'                  => $request->input('resumen'),
-            'institucion'              => $request->input('institucion'),
-            'anio_egreso'              => $request->input('anio_egreso'),
-            'cursos'                   => $request->input('cursos'),
-            'linkedin_url'             => $request->input('linkedin'),
-            'portfolio_url'            => $request->input('portfolio'),
-            'area_interes_id'          => $area,
-            'jornada_preferencia_id'   => $jornada,
-            'modalidad_preferencia_id' => $modalidad,
+            'run'                       => $request->input('run'),
+            'estado_carrera'            => $request->input('estado'),
+            'carrera'                   => $request->input('titulo'),
+            'telefono'                  => $request->input('telefono'),
+            'ciudad'                    => $request->input('ciudad'),
+            'resumen'                   => $request->input('resumen'),
+            'institucion'               => $request->input('institucion'),
+            'anio_egreso'               => $request->input('anio_egreso'),
+            'cursos'                    => $request->input('cursos'),
+            'linkedin_url'              => $request->input('linkedin'),
+            'portfolio_url'             => $request->input('portfolio'),
+            'area_interes_id'           => $area,
+            'jornada_preferencia_id'    => $jornada,
+            'modalidad_preferencia_id'  => $modalidad,
         ]);
+
+        // Si tienes defaults por constraints (si aplican en tu DB), descomenta:
+        // $estudiante->visibilidad = $estudiante->visibilidad ?? 'publico';
+        // $estudiante->frecuencia_alertas = $estudiante->frecuencia_alertas ?? 'diario';
 
         // ===========================
         // AVATAR
@@ -232,11 +280,9 @@ class UsuarioController extends Controller
 
         $estudiante->save();
 
-        return redirect('/usuarios/perfil')
+        return redirect()->route('usuarios.perfil')
             ->with('success', 'Perfil actualizado correctamente.');
     }
-
-
 
     /**
      * LISTA DE POSTULACIONES DEL USUARIO
@@ -244,9 +290,21 @@ class UsuarioController extends Controller
     public function postulaciones()
     {
         $usuarioId = session('usuario_id');
+
+        if (!$usuarioId || !is_numeric($usuarioId)) {
+            return redirect()->route('login');
+        }
+
+        $usuarioId = (int) $usuarioId;
+
         $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
 
-        // 🔥 Cargar postulaciones reales
+        // Si no existe estudiante, enviarlo a editar (sin loop)
+        if (!$estudiante) {
+            return redirect()->route('usuarios.editar')
+                ->with('error', 'Debes completar tu perfil para continuar.');
+        }
+
         $postulaciones = Postulacion::with(['oferta.empresa'])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('fecha_postulacion', 'desc')
