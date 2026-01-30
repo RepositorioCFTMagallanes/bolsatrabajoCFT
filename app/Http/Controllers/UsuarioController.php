@@ -186,6 +186,17 @@ class UsuarioController extends Controller
             'jornada_preferencia_id'  => $request->jornada,
             'modalidad_preferencia_id' => $request->modalidad,
         ]);
+        // ===========================
+        // BLINDAJE CHECK CONSTRAINTS (NO obligatorios)
+        // ===========================
+        if (!$estudiante->visibilidad) {
+            $estudiante->visibilidad = 'publico';
+        }
+
+        if (!$estudiante->frecuencia_alertas) {
+            $estudiante->frecuencia_alertas = 'diario';
+        }
+
 
         // ===========================
         // AVATAR
