@@ -23,20 +23,18 @@ class CheckRole
             return redirect()->route('login');
         }
 
-        // Mapeo interno de nombres → IDs reales en tu tabla
         $roles = [
             'admin'      => 1,
             'empresa'    => 2,
             'postulante' => 3,
         ];
 
-        // Rol requerido según la ruta
         $requiredRoleId = $roles[$roleName] ?? null;
 
-        // Rol del usuario cargado en sesión
-        $userRoleId = session('usuario_rol');
+        // 🔒 CAST EXPLÍCITO (CRÍTICO PARA CLOUD)
+        $userRoleId = (int) session('usuario_rol');
 
-        if ($requiredRoleId === null || $userRoleId !== $requiredRoleId) {
+        if ($requiredRoleId === null || $userRoleId !== (int) $requiredRoleId) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 

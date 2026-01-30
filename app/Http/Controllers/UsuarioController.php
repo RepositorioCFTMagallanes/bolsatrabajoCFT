@@ -72,8 +72,29 @@ class UsuarioController extends Controller
     {
         $usuarioId = session('usuario_id');
 
-        $estudiante = Estudiante::where('usuario_id', $usuarioId)->firstOrFail();
+        // 🔒 BLINDAJE PARA CLOUD RUN
+        if (!$usuarioId || !is_numeric($usuarioId)) {
+            Log::error('Sesion invalida en update perfil', [
+                'usuario_id' => $usuarioId,
+                'session' => session()->all(),
+            ]);
+
+            return redirect()->route('login');
+        }
+
+        $estudiante = Estudiante::where('usuario_id', (int) $usuarioId)->first();
+
+        if (!$estudiante) {
+            Log::error('Estudiante no encontrado en update perfil', [
+                'usuario_id' => $usuarioId,
+            ]);
+
+            return redirect()->route('usuarios.perfil')
+                ->withErrors('No se pudo cargar el perfil del usuario.');
+        }
+
         $usuario = $estudiante->usuario;
+
 
         $request->validate([
             'nombre'   => 'required|string|max:150',
