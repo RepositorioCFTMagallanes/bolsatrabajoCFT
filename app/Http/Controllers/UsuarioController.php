@@ -61,12 +61,38 @@ class UsuarioController extends Controller
     public function editar()
     {
         $usuarioId = session('usuario_id');
-        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
 
-        return view('users.editar', [
-            'estudiante' => $estudiante,
-        ]);
+        if (!$usuarioId || !is_numeric($usuarioId)) {
+            Log::error('Sesion invalida en editar perfil', [
+                'usuario_id' => $usuarioId,
+                'session' => session()->all(),
+            ]);
+            return redirect()->route('login');
+        }
+
+        $estudiante = Estudiante::with('usuario')
+            ->where('usuario_id', (int) $usuarioId)
+            ->first();
+
+        if (!$estudiante) {
+            Log::error('Estudiante no encontrado en editar perfil', [
+                'usuario_id' => (int) $usuarioId,
+            ]);
+            return redirect()->route('usuarios.perfil')
+                ->withErrors('No se pudo cargar el perfil del usuario.');
+        }
+
+        if (!$estudiante->usuario) {
+            Log::error('Usuario asociado no encontrado en editar perfil', [
+                'usuario_id' => (int) $usuarioId,
+            ]);
+            return redirect()->route('usuarios.perfil')
+                ->withErrors('No se pudo cargar el usuario del perfil.');
+        }
+
+        return view('users.editar', compact('estudiante'));
     }
+
 
     public function update(Request $request)
     {
