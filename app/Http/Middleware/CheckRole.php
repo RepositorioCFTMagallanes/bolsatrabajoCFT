@@ -35,8 +35,17 @@ class CheckRole
         $userRoleId = (int) session('usuario_rol');
 
         if ($requiredRoleId === null || $userRoleId !== (int) $requiredRoleId) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
+            \Log::warning('Acceso denegado por rol', [
+                'required_role' => $requiredRoleId,
+                'user_role' => $userRoleId,
+                'url' => $request->path(),
+                'method' => $request->method(),
+            ]);
+
+            return redirect()->route('login')
+                ->withErrors('No tienes permiso para acceder a esta sección.');
         }
+
 
         return $next($request);
     }
