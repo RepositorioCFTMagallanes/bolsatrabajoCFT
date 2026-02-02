@@ -1,21 +1,35 @@
 steps:
+  # ===============================
   # Build the container image
+  # ===============================
   - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build', 
-      '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA', 
-      '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:latest', 
-      '.'
-    ]
+    args:
+      - 'build'
+      - '-t'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
+      - '-t'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+      - '.'
 
-  # Push the container image to Artifact Registry
+  # ===============================
+  # Push image (commit SHA)
+  # ===============================
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA']
+    args:
+      - 'push'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
 
+  # ===============================
+  # Push image (latest)
+  # ===============================
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:latest']
+    args:
+      - 'push'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
 
-  # Deploy to Cloud Run
+  # ===============================
+  # Deploy to Cloud Run (Service)
+  # ===============================
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
@@ -23,20 +37,64 @@ steps:
       - 'deploy'
       - '${_SERVICE_NAME}'
       - '--image'
-      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA'
+      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
       - '--region'
       - '${_DEPLOY_REGION}'
-      - '--set-cloudsql-instances'
-      - '${_AR_PROJECT_ID}:${_DEPLOY_REGION}:empleabilidad-db'
-      - '--set-env-vars'
-      - 'DB_HOST=/cloudsql/${_AR_PROJECT_ID}:${_DEPLOY_REGION}:empleabilidad-db,APP_ENV=production,APP_DEBUG=false'
-      - '--update-secrets'
-      - '/app/secrets/laravel-env=laravel-env:latest'
+      - '--platform'
+      - 'managed'
       - '--allow-unauthenticated'
 
-images:
-  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:$SHORT_SHA'
-  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:latest'
+      # Cloud SQL socket mount
+      - '--set-cloudsql-instances'
+      - '${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE}'
 
+      # Non-secret env vars (Laravel safe defaults for Cloud Run)
+      - '--set-env-vars'
+      - >-
+        APP_NAME=Laravel,
+        APP_ENV=production,
+        APP_DEBUG=false,
+        APP_URL=${_APP_URL},
+        DB_CONNECTION=pgsql,
+        DB_HOST=/cloudsql/${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE},
+        DB_PORT=5432,
+        CACHE_STORE=file,
+        SESSION_DRIVER=file,
+        QUEUE_CONNECTION=sync,
+        LOG_CHANNEL=stack,
+        LOG_LEVEL=debug
+
+      # Secret env vars (pulled from Secret Manager every deploy)
+      - '--set-secrets'
+      - 'APP_KEY=APP_KEY:latest'
+      - '--set-secrets'
+      - 'DB_DATABASE=DB_DATABASE:latest'
+      - '--set-secrets'
+      - 'DB_USERNAME=DB_USERNAME:latest'
+      - '--set-secrets'
+      - 'DB_PASSWORD=DB_PASSWORD:latest'
+
+# ===============================
+# Images built by this pipeline
+# ===============================
+images:
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+
+# ===============================
+# Build options
+# ===============================
 options:
   logging: CLOUD_LOGGING_ONLY
+
+# ===============================
+# Substitution variables
+# ===============================
+substitutions:
+  _AR_HOSTNAME: us-central1-docker.pkg.dev
+  _AR_PROJECT_ID: portal-empleabilidad-cft
+  _AR_REPOSITORY: cloud-run
+  _SERVICE_NAME: portal-empleabilidad
+  _DEPLOY_REGION: us-central1
+  _CLOUDSQL_INSTANCE: empleabilidad-db
+  _APP_URL: https://portal-empleabilidad-287614110959.us-central1.run.app

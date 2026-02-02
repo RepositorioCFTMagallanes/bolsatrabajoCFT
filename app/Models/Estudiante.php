@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Estudiante extends Model
 {
     protected $table = 'estudiantes';
-    public $timestamps = false;
+
+    public $timestamps = true;
+
+    const CREATED_AT = 'creado_en';
+    const UPDATED_AT = 'actualizado_en';
 
     protected $fillable = [
         'usuario_id',
@@ -33,12 +37,9 @@ class Estudiante extends Model
         'actualizado_en',
     ];
 
-    const CREATED_AT = 'creado_en';
-    const UPDATED_AT = 'actualizado_en';
-
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
+        return $this->belongsTo(Usuario::class, 'usuario_id')->withTrashed();
     }
 
     public function postulaciones()
@@ -46,3 +47,4 @@ class Estudiante extends Model
         return $this->hasMany(Postulacion::class, 'estudiante_id');
     }
 }
+

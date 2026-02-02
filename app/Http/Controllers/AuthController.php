@@ -58,7 +58,6 @@ class AuthController extends Controller
             'usuario_rol'    => $usuario->rol_id,   // <-- FIX CORRECTO (NO CAMBIAR POR NOMBRE)
             'autenticado'    => true,
         ]);
-        Auth::loginUsingId($usuario->id);
 
 
         // ============================================================
@@ -79,12 +78,12 @@ class AuthController extends Controller
     ============================================================ */
     
     public function logout()
-    {
-        Auth::logout();
-        Session::flush();
-        session()->forget('url.intended');
-        return redirect('/login');
-    }
+{
+    Session::flush();
+    session()->forget('url.intended');
+    return redirect('/login');
+}
+
 
 
     /* ============================================================

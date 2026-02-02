@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Hash;
 
-class Usuario extends Model
+class Usuario extends Authenticatable
 {
     use SoftDeletes;
 
@@ -14,6 +14,9 @@ class Usuario extends Model
     protected $primaryKey = 'id';
 
     public $timestamps = false;
+
+    const CREATED_AT = 'creado_en';
+    const UPDATED_AT = 'actualizado_en';
 
     protected $fillable = [
         'rol_id',
@@ -28,14 +31,23 @@ class Usuario extends Model
         'actualizado_en',
     ];
 
-    // Mapear timestamps personalizados
-    const CREATED_AT = 'creado_en';
-    const UPDATED_AT = 'actualizado_en';
+    protected $hidden = [
+        'contrasena',
+        'token_recordar',
+    ];
 
-    // Mutator: Hash automático para "contrasena"
+    // 🔑 Laravel necesita saber cuál es el password
+    public function getAuthPassword()
+    {
+        return $this->contrasena;
+    }
+
+    // Mutator: hash automático
     public function setContrasenaAttribute($value)
     {
-        $this->attributes['contrasena'] = Hash::make($value);
+        if (!empty($value)) {
+            $this->attributes['contrasena'] = Hash::make($value);
+        }
     }
 
     // Relaciones
@@ -53,5 +65,4 @@ class Usuario extends Model
     {
         return $this->hasOne(Estudiante::class, 'usuario_id');
     }
-    
 }
