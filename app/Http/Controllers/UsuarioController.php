@@ -52,8 +52,21 @@ class UsuarioController extends Controller
         $ofertasRecomendadas = $service->getRecomendadas($estudiante);
         $totalOfertasRecomendadas = $ofertasRecomendadas->count();
 
+        // ===========================
+        // Resolver URLs públicas (GCS)
+        // ===========================
+        $estudiante->avatar_url = $estudiante->avatar
+            ? Storage::disk('gcs')->url($estudiante->avatar)
+            : asset('img/testimonios/test (2).png');
+
+        $estudiante->cv_url = $estudiante->ruta_cv
+            ? Storage::disk('gcs')->url($estudiante->ruta_cv)
+            : null;
+
+
         return view('users.perfil', [
             'estudiante'               => $estudiante,
+
             'postulaciones'            => $postulaciones,
             'ofertasRecomendadas'      => $ofertasRecomendadas,
             'totalPostulaciones'       => $totalPostulaciones,
@@ -116,6 +129,17 @@ class UsuarioController extends Controller
             // (No es necesario guardar nada aquí)
             $estudiante->setRelation('usuario', $usuario);
         }
+        // ===========================
+        // Resolver URLs públicas (GCS) para la vista editar
+        // ===========================
+        $estudiante->avatar_url = $estudiante->avatar
+            ? Storage::disk('gcs')->url($estudiante->avatar)
+            : asset('img/testimonios/test (2).png');
+
+        $estudiante->cv_url = $estudiante->ruta_cv
+            ? Storage::disk('gcs')->url($estudiante->ruta_cv)
+            : null;
+
 
         return view('users.editar', compact('estudiante'));
     }
