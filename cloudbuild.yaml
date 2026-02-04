@@ -62,7 +62,11 @@ steps:
         SESSION_DRIVER=file,
         QUEUE_CONNECTION=sync,
         LOG_CHANNEL=stack,
-        LOG_LEVEL=debug
+        LOG_LEVEL=debug,
+        GOOGLE_CLOUD_PROJECT_ID=${_AR_PROJECT_ID},
+        GOOGLE_CLOUD_STORAGE_BUCKET=magallanes-portal-files-prod
+        
+        
 
       # Secret env vars (pulled from Secret Manager every deploy)
       - '--set-secrets'
