@@ -8,6 +8,7 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use App\Services\OfertaRecommendationService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class UsuarioController extends Controller
 {
@@ -231,52 +232,64 @@ class UsuarioController extends Controller
         // $estudiante->frecuencia_alertas = $estudiante->frecuencia_alertas ?? 'diario';
 
         // ===========================
-        // AVATAR
+        // AVATAR (Google Cloud Storage)
         // ===========================
         try {
             if ($request->hasFile('avatar')) {
-                if ($estudiante->avatar) {
-                    $ruta = public_path($estudiante->avatar);
-                    if (is_file($ruta)) @unlink($ruta);
-                }
-
-                $destino = public_path('uploads/avatars');
-                if (!is_dir($destino)) mkdir($destino, 0775, true);
 
                 $archivo = $request->file('avatar');
-                $nombre = uniqid('avatar_') . '.' . $archivo->getClientOriginalExtension();
-                $archivo->move($destino, $nombre);
 
-                $estudiante->avatar = 'uploads/avatars/' . $nombre;
+                $nombre = 'estudiantes/avatars/'
+                    . $usuarioId
+                    . '_'
+                    . time()
+                    . '.'
+                    . $archivo->getClientOriginalExtension();
+
+                // Subir a GCS
+                Storage::disk('gcs')->put(
+                    $nombre,
+                    file_get_contents($archivo),
+                    'public'
+                );
+
+                // Guardar SOLO el path en BD
+                $estudiante->avatar = $nombre;
             }
         } catch (\Throwable $e) {
-            Log::error('Error subiendo avatar', ['error' => $e->getMessage()]);
+            Log::error('Error subiendo avatar a GCS', ['error' => $e->getMessage()]);
             return back()->withErrors('Error al subir la foto de perfil');
         }
 
+
         // ===========================
-        // CV
+        // CV (Google Cloud Storage)
         // ===========================
         try {
             if ($request->hasFile('cv')) {
-                if ($estudiante->ruta_cv) {
-                    $ruta = public_path($estudiante->ruta_cv);
-                    if (is_file($ruta)) @unlink($ruta);
-                }
-
-                $destino = public_path('uploads/cv');
-                if (!is_dir($destino)) mkdir($destino, 0775, true);
 
                 $archivo = $request->file('cv');
-                $nombre = time() . '_' . preg_replace('/\s+/', '_', $archivo->getClientOriginalName());
-                $archivo->move($destino, $nombre);
 
-                $estudiante->ruta_cv = 'uploads/cv/' . $nombre;
+                $nombre = 'estudiantes/cv/'
+                    . $usuarioId
+                    . '_'
+                    . time()
+                    . '.pdf';
+
+                Storage::disk('gcs')->put(
+                    $nombre,
+                    file_get_contents($archivo),
+                    'public'
+                );
+
+                // Guardar SOLO el path en BD
+                $estudiante->ruta_cv = $nombre;
             }
         } catch (\Throwable $e) {
-            Log::error('Error subiendo CV', ['error' => $e->getMessage()]);
+            Log::error('Error subiendo CV a GCS', ['error' => $e->getMessage()]);
             return back()->withErrors('Error al subir el CV');
         }
+
 
         $estudiante->save();
 
