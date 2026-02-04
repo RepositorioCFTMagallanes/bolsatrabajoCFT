@@ -14,14 +14,18 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     libpq-dev \
-    && docker-php-ext-install \
+    libmagic-dev \
+
+   docker-php-ext-install \
     pdo \
     pdo_mysql \
     pdo_pgsql \
     mbstring \
     bcmath \
     exif \
+    fileinfo \
     pcntl \
+
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
