@@ -15,19 +15,18 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpq-dev \
     libmagic-dev \
-
-   docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    pdo_pgsql \
-    mbstring \
-    bcmath \
-    exif \
-    fileinfo \
-    pcntl \
-
+    && docker-php-ext-install \
+        pdo \
+        pdo_mysql \
+        pdo_pgsql \
+        mbstring \
+        bcmath \
+        exif \
+        fileinfo \
+        pcntl \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
+
 
 # =====================================================
 # Composer (desde imagen oficial)
