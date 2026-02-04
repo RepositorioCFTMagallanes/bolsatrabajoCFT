@@ -36,24 +36,23 @@ class AdminController extends Controller
         |--------------------------------------------------------------------------
         */
         $ultimasEmpresas = Empresa::orderByDesc('creado_en')
-            ->take(6)
+            ->limit(6)
             ->get();
 
         $ultimosPostulantes = Usuario::where('rol_id', 3)
             ->orderByDesc('creado_en')
-            ->take(6)
+            ->limit(6)
             ->get();
 
         /*
         |--------------------------------------------------------------------------
-        | OFERTAS CREADAS POR MES (MySQL + PostgreSQL)
+        | OFERTAS CREADAS POR MES (PostgreSQL / MySQL)
         |--------------------------------------------------------------------------
         */
         $driver = DB::getDriverName();
         $year   = now()->year;
 
         if ($driver === 'pgsql') {
-            // PostgreSQL (Cloud SQL)
             $ofertasPorMes = OfertaTrabajo::selectRaw(
                     'EXTRACT(MONTH FROM creado_en)::int AS mes, COUNT(*) AS total'
                 )
@@ -63,7 +62,6 @@ class AdminController extends Controller
                 ->pluck('total', 'mes')
                 ->toArray();
         } else {
-            // MySQL / MariaDB (Railway)
             $ofertasPorMes = OfertaTrabajo::selectRaw(
                     'MONTH(creado_en) AS mes, COUNT(*) AS total'
                 )
@@ -82,15 +80,15 @@ class AdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | POSTULACIONES POR ÁREA
+        | POSTULACIONES POR ÁREA (LEFT JOIN SAFE)
         |--------------------------------------------------------------------------
-        | PostgreSQL-safe: no ordenar por alias
         */
         $postPorArea = Postulacion::selectRaw(
                 'areas_empleo.nombre AS area, COUNT(postulaciones.id) AS total'
             )
-            ->join('ofertas_trabajo', 'postulaciones.oferta_id', '=', 'ofertas_trabajo.id')
-            ->join('areas_empleo', 'ofertas_trabajo.area_id', '=', 'areas_empleo.id')
+            ->leftJoin('ofertas_trabajo', 'postulaciones.oferta_id', '=', 'ofertas_trabajo.id')
+            ->leftJoin('areas_empleo', 'ofertas_trabajo.area_id', '=', 'areas_empleo.id')
+            ->whereNotNull('areas_empleo.nombre')
             ->groupBy('areas_empleo.nombre')
             ->orderByRaw('COUNT(postulaciones.id) DESC')
             ->pluck('total', 'area')
@@ -98,14 +96,13 @@ class AdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | TOP 5 CARRERAS CON MÁS POSTULACIONES
+        | TOP 5 CARRERAS CON MÁS POSTULACIONES (LEFT JOIN SAFE)
         |--------------------------------------------------------------------------
-        | PostgreSQL-safe: no ordenar por alias
         */
         $topCarreras = Postulacion::selectRaw(
                 'estudiantes.carrera AS carrera, COUNT(postulaciones.id) AS total'
             )
-            ->join('estudiantes', 'postulaciones.estudiante_id', '=', 'estudiantes.id')
+            ->leftJoin('estudiantes', 'postulaciones.estudiante_id', '=', 'estudiantes.id')
             ->whereNotNull('estudiantes.carrera')
             ->groupBy('estudiantes.carrera')
             ->orderByRaw('COUNT(postulaciones.id) DESC')
@@ -115,11 +112,11 @@ class AdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | RETORNO A LA VISTA
+        | RETORNO A LA VISTA (SESIONES BLINDADAS)
         |--------------------------------------------------------------------------
         */
         return view('admin.dashboard', [
-            'adminName'          => session('usuario_nombre'),
+            'adminName'          => session('usuario_nombre') ?? 'Administrador',
             'totalEmpresas'      => $totalEmpresas,
             'totalOfertas'       => $totalOfertas,
             'totalPostulaciones' => $totalPostulaciones,
