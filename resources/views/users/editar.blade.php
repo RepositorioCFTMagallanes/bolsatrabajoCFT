@@ -1,508 +1,599 @@
+
 @extends('layouts.app')
 
 @section('content')
-<main class="container user-edit">
+    <main class="container user-edit">
 
-    {{-- Breadcrumb --}}
-    <nav class="breadcrumb" aria-label="Breadcrumb">
+        {{-- Breadcrumb --}}
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <ul>
+                <li><a href="{{ route('usuarios.perfil') }}">Perfil postulante</a></li>
+                <li class="current" aria-current="page">Editar perfil</li>
+            </ul>
+        </nav>
+
+        {{-- Encabezado de página --}}
+        <header class="page-header">
+            <h1>Editar Perfil</h1>
+            <p class="muted">Actualiza tu información para mejorar tus postulaciones.</p>
+        </header>
+
+        <form action="{{ url('/usuarios/editar') }}" method="post" enctype="multipart/form-data">
+            @csrf
+            @if ($errors->any())
+    <div class="alert-error">
         <ul>
-            <li><a href="{{ route('usuarios.perfil') }}">Perfil postulante</a></li>
-            <li class="current" aria-current="page">Editar perfil</li>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
         </ul>
-    </nav>
-
-    {{-- Encabezado de página --}}
-    <header class="page-header">
-        <h1>Editar Perfil</h1>
-        <p class="muted">Actualiza tu información para mejorar tus postulaciones.</p>
-    </header>
-
-    <form action="{{ url('/usuarios/editar') }}" method="post" enctype="multipart/form-data">
-        @csrf
-
-        {{-- === Avatar + Nombre / Titulación === --}}
-        <section class="card">
-            <h2>Identidad</h2>
-            <div class="grid-2">
-                <div class="field">
-                    <label for="avatar">Foto de perfil</label>
-                    <div class="avatar-row">
-                        @php
-                        $avatar = $estudiante->avatar
-                        ? \Illuminate\Support\Facades\Storage::disk('gcs')->url($estudiante->avatar)
-                        : asset('img/testimonios/test (2).png');
-                        @endphp
-
-                        <img class="avatar-preview" src="{{ $avatar }}" alt="Avatar actual">
+    </div>
+@endif
 
 
-                        <div class="avatar-actions">
-                            <input type="file" id="avatar" name="avatar" accept="image/*">
-                            <p class="hint">Formatos: JPG o PNG, máx. 2MB.</p>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div class="grid-2">
-                        <div class="field">
-                            <label for="nombre">Nombre</label>
-                            <input id="nombre" name="nombre" type="text"
-                                value="{{ optional($estudiante->usuario)->nombre }}">
-                            <div class="field">
-                                <label for="apellido">Apellido</label>
-                                <input id="apellido" name="apellido" type="text"
-                                    value="{{ optional($estudiante->usuario)->apellido }}">
+            {{-- === Avatar + Nombre / Titulación === --}}
+            <section class="card">
+                <h2>Identidad</h2>
+                <div class="grid-2">
+                    <div class="field">
+                        <label for="avatar">Foto de perfil</label>
+                        <div class="avatar-row">
+                            <img class="avatar-preview"
+                                src="{{ $estudiante->avatar ? asset($estudiante->avatar) : asset('img/testimonios/test (2).png') }}"
+                                alt="Avatar actual">
+                            <div class="avatar-actions">
+                                <input type="file" id="avatar" name="avatar" accept="image/*">
+                                <p class="hint">Formatos: JPG o PNG, máx. 2MB.</p>
                             </div>
                         </div>
-                        <div class="field">
-                            <label for="run">RUN (opcional)</label>
-                            <input id="run" name="run" type="text" value="{{ $estudiante->run }}">
+                    </div>
+                    <div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="nombre">Nombre</label>
+                                <input id="nombre" name="nombre" type="text"
+                                    value="{{ $estudiante->usuario->nombre }}">
+                                <div class="field">
+                                    <label for="apellido">Apellido</label>
+                                    <input id="apellido" name="apellido" type="text"
+                                        value="{{ $estudiante->usuario->apellido }}">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="run">RUN (opcional)</label>
+                                <input id="run" name="run" type="text" value="{{ $estudiante->run }}">
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="estado">Estado carrera</label>
+                                <select id="estado" name="estado">
+                                    <option value="Egresado/a"
+                                        {{ $estudiante->estado_carrera == 'Egresado/a' ? 'selected' : '' }}>Egresado/a
+                                    </option>
+                                    <option value="Estudiante"
+                                        {{ $estudiante->estado_carrera == 'Estudiante' ? 'selected' : '' }}>Estudiante
+                                    </option>
+                                    <option value="Titulado(a)"
+                                        {{ $estudiante->estado_carrera == 'Titulad(a)' ? 'selected' : '' }}>Titulado/a
+                                    </option>
+                                </select>
+
+                            </div>
+                            <div class="field">
+                                <label for="titulo">Carrera / Título</label>
+                                <input id="titulo" name="titulo" type="text" value="{{ $estudiante->carrera }}">
+                            </div>
                         </div>
                     </div>
-                    <div class="grid-2">
-                        <div class="field">
-                            <label for="estado">Estado carrera</label>
-                            <select id="estado" name="estado">
-                                <option value="Egresado/a"
-                                    {{ $estudiante->estado_carrera == 'Egresado/a' ? 'selected' : '' }}>Egresado/a
-                                </option>
-                                <option value="Estudiante"
-                                    {{ $estudiante->estado_carrera == 'Estudiante' ? 'selected' : '' }}>Estudiante
-                                </option>
-                                <option value="Titulado(a)"
-                                    {{ $estudiante->estado_carrera == 'Titulad(a)' ? 'selected' : '' }}>Titulado/a
-                                </option>
-                            </select>
+                </div>
+            </section>
 
-                        </div>
-                        <div class="field">
-                            <label for="titulo">Carrera / Título</label>
-                            <input id="titulo" name="titulo" type="text" value="{{ $estudiante->carrera }}">
-                        </div>
+            {{-- === Contacto === --}}
+            <section class="card">
+                <h2>Contacto</h2>
+                <div class="grid-3">
+                    <div class="field">
+                        <label for="email">Correo</label>
+                        <input id="email" name="email" type="email" value="{{ $estudiante->usuario->email }}">
+                    </div>
+                    <div class="field">
+                        <label for="telefono">Teléfono</label>
+                        <input id="telefono" name="telefono" type="text" value="{{ $estudiante->telefono }}">
+                    </div>
+                    <div class="field">
+                        <label for="ciudad">Ciudad</label>
+                        <input id="ciudad" name="ciudad" type="text" value="{{ $estudiante->ciudad }}">
                     </div>
                 </div>
+                <div class="field">
+    <label for="resumen">Resumen (extracto breve)</label>
+    <textarea id="resumen" name="resumen" rows="3" maxlength="2000">{{ $estudiante->resumen }}</textarea>
+
+@error('resumen')
+    <span class="error-text">{{ $message }}</span>
+@enderror
+
+<span class="hint">
+
+        Máximo: 2000 caracteres.
+        <span id="contador-resumen">0 / 2000</span>
+    </span>
+</div>
+           </section>
+
+            {{-- === Formación === --}}
+            <section class="card">
+                <h2>Formación</h2>
+                <div class="grid-2">
+                    <div class="field">
+                        <label for="institucion">Institución</label>
+                        <input id="institucion" name="institucion" type="text" value="{{ $estudiante->institucion }}">
+                    </div>
+                    <div class="field">
+                        <label for="anio_egreso">Año de egreso</label>
+                        <input id="anio_egreso" name="anio_egreso" type="number" min="1990" max="2099"
+                            value="{{ $estudiante->anio_egreso }}">
+                    </div>
+                </div>
+                <div class="field">
+    <label for="cursos">Cursos / Certificaciones (opcional)</label>
+    <textarea id="cursos" name="cursos" rows="2" maxlength="2000">{{ $estudiante->cursos }}</textarea>
+
+@error('cursos')
+    <span class="error-text">{{ $message }}</span>
+@enderror
+
+<span class="hint">
+
+        Máximo: 2000 caracteres.
+        <span id="contador-cursos">0 / 2000</span>
+    </span>
+</div>
+
+            </section>
+
+            {{-- === CV / Portafolio === --}}
+            <section class="card">
+                <h2>CV y enlaces</h2>
+                <div class="grid-2">
+                    <div class="field">
+                        <label for="cv">Subir CV (PDF)</label>
+                        <input id="cv" name="cv" type="file" accept="application/pdf">
+                        @if ($estudiante->ruta_cv)
+                            <p class="hint">
+                                CV actual: <a href="{{ asset($estudiante->ruta_cv) }}" target="_blank">Ver PDF</a>
+                            </p>
+                        @endif
+
+                        <span class="hint">Máx. 4MB. Formato PDF.</span>
+                    </div>
+                    <div class="field">
+                        <label for="linkedin">LinkedIn (opcional)</label>
+                        <input id="linkedin" name="linkedin" type="url" value="{{ $estudiante->linkedin_url }}">
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="portfolio">Portafolio / Sitio (opcional)</label>
+                    <input id="portfolio" name="portfolio" type="url" value="{{ $estudiante->portfolio_url }}">
+                </div>
+            </section>
+
+            {{-- === Preferencias === --}}
+            <section class="card">
+                <h2>Preferencias</h2>
+                <div class="grid-3">
+
+                    <div class="field">
+                        <label for="area">Área de interés</label>
+                        <select id="area" name="area">
+                            <option value="1" {{ $estudiante->area_interes_id == 1 ? 'selected' : '' }}>Salud
+                            </option>
+                            <option value="2" {{ $estudiante->area_interes_id == 2 ? 'selected' : '' }}>
+                                Administración</option>
+                            <option value="3" {{ $estudiante->area_interes_id == 3 ? 'selected' : '' }}>Logística
+                            </option>
+                            <option value="4" {{ $estudiante->area_interes_id == 4 ? 'selected' : '' }}>Turismo
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="jornada">Jornada</label>
+                        <select id="jornada" name="jornada">
+                            <option value="1" {{ $estudiante->jornada_preferencia_id == 1 ? 'selected' : '' }}>
+                                Completa</option>
+                            <option value="2" {{ $estudiante->jornada_preferencia_id == 2 ? 'selected' : '' }}>Media
+                                jornada</option>
+                            <option value="3" {{ $estudiante->jornada_preferencia_id == 3 ? 'selected' : '' }}>
+                                Práctica</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="modalidad">Modalidad</label>
+                        <select id="modalidad" name="modalidad">
+                            <option value="1" {{ $estudiante->modalidad_preferencia_id == 1 ? 'selected' : '' }}>
+                                Presencial</option>
+                            <option value="2" {{ $estudiante->modalidad_preferencia_id == 2 ? 'selected' : '' }}>
+                                Híbrido</option>
+                            <option value="3" {{ $estudiante->modalidad_preferencia_id == 3 ? 'selected' : '' }}>
+                                Remoto</option>
+                        </select>
+                    </div>
+
+                </div>
+            </section>
+
+
+            {{-- Acciones --}}
+            <div class="form-actions">
+                <a href="{{ route('usuarios.perfil') }}" class="btn btn-ghost">Cancelar</a>
+                <button type="submit" name="borrador" value="1" class="btn btn-outline">Guardar borrador</button>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
             </div>
-        </section>
+        </form>
+    </main>
 
-        {{-- === Contacto === --}}
-        <section class="card">
-            <h2>Contacto</h2>
-            <div class="grid-3">
-                <div class="field">
-                    <label for="email">Correo</label>
-                    <input id="email" name="email" type="email"
-                        value="{{ optional($estudiante->usuario)->email }}">
-                </div>
-                <div class="field">
-                    <label for="telefono">Teléfono</label>
-                    <input id="telefono" name="telefono" type="text" value="{{ $estudiante->telefono }}">
-                </div>
-                <div class="field">
-                    <label for="ciudad">Ciudad</label>
-                    <input id="ciudad" name="ciudad" type="text" value="{{ $estudiante->ciudad }}">
-                </div>
-            </div>
-            <div class="field">
-                <label for="resumen">Resumen (extracto breve)</label>
-                <textarea id="resumen" name="resumen" rows="3">{{ $estudiante->resumen }}</textarea>
-                <span class="hint">Máximo recomendado: 280–400 caracteres.</span>
-            </div>
-        </section>
+    @push('styles')
+        <style>
+            /* Breadcrumb (igual al usado en páginas anteriores) */
+            .breadcrumb ul {
+                list-style: none;
+                display: flex;
+                gap: .5rem;
+                padding: 0;
+                margin: 0 0 .75rem;
+                align-items: center;
+                color: #6b7280;
+                font-size: .92rem;
+            }
 
-        {{-- === Formación === --}}
-        <section class="card">
-            <h2>Formación</h2>
-            <div class="grid-2">
-                <div class="field">
-                    <label for="institucion">Institución</label>
-                    <input id="institucion" name="institucion" type="text" value="{{ $estudiante->institucion }}">
-                </div>
-                <div class="field">
-                    <label for="anio_egreso">Año de egreso</label>
-                    <input id="anio_egreso" name="anio_egreso" type="number" min="1990" max="2099"
-                        value="{{ $estudiante->anio_egreso }}">
-                </div>
-            </div>
-            <div class="field">
-                <label for="cursos">Cursos / Certificaciones (opcional)</label>
-                <textarea id="cursos" name="cursos" rows="2">{{ $estudiante->cursos }}</textarea>
-            </div>
-        </section>
+            .breadcrumb li a {
+                color: #6b7280;
+                text-decoration: none;
+            }
 
-        {{-- === CV / Portafolio === --}}
-        <section class="card">
-            <h2>CV y enlaces</h2>
-            <div class="grid-2">
-                <div class="field">
-                    <label for="cv">Subir CV (PDF)</label>
-                    <input id="cv" name="cv" type="file" accept="application/pdf">
-                    @if ($estudiante->ruta_cv)
-                    <p class="hint">
-                        CV actual:
-                        <a href="{{ \Illuminate\Support\Facades\Storage::disk('gcs')->url($estudiante->ruta_cv) }}"
-                            target="_blank">
-                            Ver PDF
-                        </a>
-                    </p>
-                    @endif
+            .breadcrumb li a:hover {
+                color: #374151;
+                text-decoration: underline;
+            }
 
+            .breadcrumb li+li::before {
+                content: '›';
+                opacity: .6;
+                margin: 0 .35rem 0 .15rem;
+            }
 
-                    <span class="hint">Máx. 4MB. Formato PDF.</span>
-                </div>
-                <div class="field">
-                    <label for="linkedin">LinkedIn (opcional)</label>
-                    <input id="linkedin" name="linkedin" type="url" value="{{ $estudiante->linkedin_url }}">
-                </div>
-            </div>
-            <div class="field">
-                <label for="portfolio">Portafolio / Sitio (opcional)</label>
-                <input id="portfolio" name="portfolio" type="url" value="{{ $estudiante->portfolio_url }}">
-            </div>
-        </section>
+            .breadcrumb .current {
+                color: #111827;
+                font-weight: 600;
+            }
 
-        {{-- === Preferencias === --}}
-        <section class="card">
-            <h2>Preferencias</h2>
-            <div class="grid-3">
+            .user-edit {
+                padding: 1.25rem 0 2rem;
+            }
 
-                <div class="field">
-                    <label for="area">Área de interés</label>
-                    <select id="area" name="area">
-                        <option value="1" {{ $estudiante->area_interes_id == 1 ? 'selected' : '' }}>Salud
-                        </option>
-                        <option value="2" {{ $estudiante->area_interes_id == 2 ? 'selected' : '' }}>
-                            Administración</option>
-                        <option value="3" {{ $estudiante->area_interes_id == 3 ? 'selected' : '' }}>Logística
-                        </option>
-                        <option value="4" {{ $estudiante->area_interes_id == 4 ? 'selected' : '' }}>Turismo
-                        </option>
-                    </select>
-                </div>
+            .page-header h1 {
+                margin: 0 0 .25rem;
+                font-size: 1.5rem;
+            }
 
-                <div class="field">
-                    <label for="jornada">Jornada</label>
-                    <select id="jornada" name="jornada">
-                        <option value="1" {{ $estudiante->jornada_preferencia_id == 1 ? 'selected' : '' }}>
-                            Completa</option>
-                        <option value="2" {{ $estudiante->jornada_preferencia_id == 2 ? 'selected' : '' }}>Media
-                            jornada</option>
-                        <option value="3" {{ $estudiante->jornada_preferencia_id == 3 ? 'selected' : '' }}>
-                            Práctica</option>
-                    </select>
-                </div>
+            .page-header .muted {
+                color: #6b7280;
+                margin: 0 0 1rem;
+            }
 
-                <div class="field">
-                    <label for="modalidad">Modalidad</label>
-                    <select id="modalidad" name="modalidad">
-                        <option value="1" {{ $estudiante->modalidad_preferencia_id == 1 ? 'selected' : '' }}>
-                            Presencial</option>
-                        <option value="2" {{ $estudiante->modalidad_preferencia_id == 2 ? 'selected' : '' }}>
-                            Híbrido</option>
-                        <option value="3" {{ $estudiante->modalidad_preferencia_id == 3 ? 'selected' : '' }}>
-                            Remoto</option>
-                    </select>
-                </div>
+            .card {
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+            }
 
-            </div>
-        </section>
+            .card>h2 {
+                margin: 0 0 1rem;
+                font-size: 1.05rem;
+            }
 
+            .grid-2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
 
-        {{-- Acciones --}}
-        <div class="form-actions">
-            <a href="{{ route('usuarios.perfil') }}" class="btn btn-ghost">Cancelar</a>
-            <button type="submit" name="borrador" value="1" class="btn btn-outline">Guardar borrador</button>
-            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-        </div>
-    </form>
-</main>
+            .grid-3 {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+            }
 
-@push('styles')
-<style>
-    /* Breadcrumb (igual al usado en páginas anteriores) */
-    .breadcrumb ul {
-        list-style: none;
-        display: flex;
-        gap: .5rem;
-        padding: 0;
-        margin: 0 0 .75rem;
-        align-items: center;
-        color: #6b7280;
-        font-size: .92rem;
-    }
+            .field {
+                display: flex;
+                flex-direction: column;
+                gap: .4rem;
+            }
 
-    .breadcrumb li a {
-        color: #6b7280;
-        text-decoration: none;
-    }
+            .field input,
+            .field select,
+            .field textarea {
+                padding: .65rem .75rem;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: .95rem;
+                background: #fff;
+            }
 
-    .breadcrumb li a:hover {
-        color: #374151;
-        text-decoration: underline;
-    }
+            .field textarea {
+                resize: vertical;
+            }
 
-    .breadcrumb li+li::before {
-        content: '›';
-        opacity: .6;
-        margin: 0 .35rem 0 .15rem;
-    }
+            .hint {
+                color: #6b7280;
+                font-size: .8rem;
+            }
 
-    .breadcrumb .current {
-        color: #111827;
-        font-weight: 600;
-    }
+            .avatar-row {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
 
-    .user-edit {
-        padding: 1.25rem 0 2rem;
-    }
+            .avatar-preview {
+                width: 72px;
+                height: 72px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
 
-    .page-header h1 {
-        margin: 0 0 .25rem;
-        font-size: 1.5rem;
-    }
+            .avatar-actions input[type="file"] {
+                padding: .55rem;
+                border: 1px dashed #d1d5db;
+                border-radius: 8px;
+                background: #fafafa;
+            }
 
-    .page-header .muted {
-        color: #6b7280;
-        margin: 0 0 1rem;
-    }
+            .form-actions {
+                display: flex;
+                gap: .75rem;
+                justify-content: flex-end;
+                align-items: center;
+                margin-top: 1rem;
+            }
 
-    .card {
-        background: #fff;
-        border: 1px solid #eee;
-        border-radius: 12px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
-    }
+            /* Botones (coherentes con los ya usados en el sitio) */
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: .4rem;
+                border-radius: 10px;
+                padding: .8rem 1.25rem;
+                font-weight: 700;
+                line-height: 1;
+                border: 1px solid transparent;
+                text-decoration: none;
+                cursor: pointer;
+                transition: background .2s, color .2s, border-color .2s, box-shadow .2s, transform .06s;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+            }
 
-    .card>h2 {
-        margin: 0 0 1rem;
-        font-size: 1.05rem;
-    }
+            .btn:active {
+                transform: translateY(1px);
+            }
 
-    .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
+            .btn-primary {
+                background: #c91e25;
+                color: #fff;
+                border-color: #c91e25;
+            }
 
-    .grid-3 {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-    }
+            .btn-primary:hover {
+                background: #b01920;
+                border-color: #b01920;
+            }
 
-    .field {
-        display: flex;
-        flex-direction: column;
-        gap: .4rem;
-    }
+            .btn-primary:focus {
+                outline: 0;
+                box-shadow: 0 0 0 4px rgba(201, 30, 37, .18);
+            }
 
-    .field input,
-    .field select,
-    .field textarea {
-        padding: .65rem .75rem;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: .95rem;
-        background: #fff;
-    }
+            .btn-outline {
+                background: #fff;
+                color: #111827;
+                border-color: #d1d5db;
+            }
 
-    .field textarea {
-        resize: vertical;
-    }
+            .btn-outline:hover {
+                background: #f9fafb;
+                border-color: #cbd5e1;
+            }
 
-    .hint {
-        color: #6b7280;
-        font-size: .8rem;
-    }
+            .btn-outline:focus {
+                outline: 0;
+                box-shadow: 0 0 0 4px rgba(2, 132, 199, .15);
+            }
 
-    .avatar-row {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
+            .btn-ghost {
+                background: transparent;
+                color: #c91e25;
+                border-color: transparent;
+            }
 
-    .avatar-preview {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
+            .btn-ghost:hover {
+                background: #fff1f2;
+            }
 
-    .avatar-actions input[type="file"] {
-        padding: .55rem;
-        border: 1px dashed #d1d5db;
-        border-radius: 8px;
-        background: #fafafa;
-    }
+            .btn-ghost:focus {
+                outline: 0;
+                box-shadow: 0 0 0 4px rgba(201, 30, 37, .15);
+            }
 
-    .form-actions {
-        display: flex;
-        gap: .75rem;
-        justify-content: flex-end;
-        align-items: center;
-        margin-top: 1rem;
-    }
+            /* ====== Responsive ====== */
 
-    /* Botones (coherentes con los ya usados en el sitio) */
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        border-radius: 10px;
-        padding: .8rem 1.25rem;
-        font-weight: 700;
-        line-height: 1;
-        border: 1px solid transparent;
-        text-decoration: none;
-        cursor: pointer;
-        transition: background .2s, color .2s, border-color .2s, box-shadow .2s, transform .06s;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
-    }
+            /* Tablet (≤ 1024px) */
+            @media (max-width: 1024px) {
+                .grid-3 {
+                    grid-template-columns: 1fr 1fr;
+                }
+            }
 
-    .btn:active {
-        transform: translateY(1px);
-    }
+            /* Mobile (≤ 768px) */
+            @media (max-width: 768px) {
 
-    .btn-primary {
-        background: #c91e25;
-        color: #fff;
-        border-color: #c91e25;
-    }
+                .grid-2,
+                .grid-3 {
+                    grid-template-columns: 1fr;
+                }
 
-    .btn-primary:hover {
-        background: #b01920;
-        border-color: #b01920;
-    }
+                /* Acciones del formulario: apilar y ocupar ancho completo */
+                .form-actions {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: stretch;
+                    /* ← stretch va en align-items, no en justify-content */
+                    gap: .5rem;
+                    margin-top: 1rem;
+                }
 
-    .btn-primary:focus {
-        outline: 0;
-        box-shadow: 0 0 0 4px rgba(201, 30, 37, .18);
-    }
+                .form-actions .btn {
+                    width: 100%;
+                }
+            }
 
-    .btn-outline {
-        background: #fff;
-        color: #111827;
-        border-color: #d1d5db;
-    }
+            /* Small mobile (≤ 640px) */
+            @media (max-width: 640px) {
 
-    .btn-outline:hover {
-        background: #f9fafb;
-        border-color: #cbd5e1;
-    }
+                /* Contenedor y tarjetas */
+                .user-edit {
+                    padding: .75rem 0 1.25rem;
+                }
 
-    .btn-outline:focus {
-        outline: 0;
-        box-shadow: 0 0 0 4px rgba(2, 132, 199, .15);
-    }
+                .card {
+                    padding: .9rem;
+                    border-radius: 12px;
+                }
 
-    .btn-ghost {
-        background: transparent;
-        color: #c91e25;
-        border-color: transparent;
-    }
+                /* Tipografía de cabecera */
+                .page-header h1 {
+                    font-size: 1.25rem;
+                }
 
-    .btn-ghost:hover {
-        background: #fff1f2;
-    }
+                .page-header .muted {
+                    font-size: .9rem;
+                }
 
-    .btn-ghost:focus {
-        outline: 0;
-        box-shadow: 0 0 0 4px rgba(201, 30, 37, .15);
-    }
+                /* Breadcrumb con salto de línea */
+                .breadcrumb ul {
+                    flex-wrap: wrap;
+                    row-gap: .25rem;
+                }
 
-    /* ====== Responsive ====== */
+                /* Avatar compacto */
+                .avatar-row {
+                    align-items: flex-start;
+                    gap: .75rem;
+                }
 
-    /* Tablet (≤ 1024px) */
-    @media (max-width: 1024px) {
-        .grid-3 {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
+                .avatar-preview {
+                    width: 56px;
+                    height: 56px;
+                }
 
-    /* Mobile (≤ 768px) */
-    @media (max-width: 768px) {
+                /* Inputs legibles y sin zoom iOS */
+                .field input,
+                .field select,
+                .field textarea {
+                    font-size: 16px;
+                    /* evita el auto-zoom en iOS */
+                    padding: .65rem .75rem;
+                }
 
-        .grid-2,
-        .grid-3 {
-            grid-template-columns: 1fr;
+                /* File inputs a todo el ancho */
+                .avatar-actions input[type="file"],
+                #cv {
+                    width: 100%;
+                }
+
+                /* Aire en bloques de experiencia */
+                .exp-block {
+                    padding: .85rem;
+                }
+            }
+            .alert-error {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #7f1d1d;
+    padding: .75rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.error-text {
+    color: #b91c1c;
+    font-size: .85rem;
+    margin-top: .25rem;
+}
+
+        </style>
+    @endpush
+            @push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    function activarContador(textareaId, contadorId, max) {
+        const textarea = document.getElementById(textareaId);
+        const contador = document.getElementById(contadorId);
+
+        if (!textarea || !contador) return;
+
+        function actualizar() {
+            const longitud = textarea.value.length;
+            contador.textContent = longitud + " / " + max;
+
+            if (longitud > max) {
+                contador.style.color = 'red';
+            } else {
+                contador.style.color = '#6b7280';
+            }
         }
 
-        /* Acciones del formulario: apilar y ocupar ancho completo */
-        .form-actions {
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            /* ← stretch va en align-items, no en justify-content */
-            gap: .5rem;
-            margin-top: 1rem;
-        }
-
-        .form-actions .btn {
-            width: 100%;
-        }
+        textarea.addEventListener('input', actualizar);
+        actualizar();
     }
 
-    /* Small mobile (≤ 640px) */
-    @media (max-width: 640px) {
+    activarContador('resumen', 'contador-resumen', 2000);
+    activarContador('cursos', 'contador-cursos', 2000);
 
-        /* Contenedor y tarjetas */
-        .user-edit {
-            padding: .75rem 0 1.25rem;
+    // ===============================
+    // BLOQUEAR ENVÍO SI EXCEDE 2000
+    // ===============================
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit', function (e) {
+        const resumen = document.getElementById('resumen');
+        const cursos = document.getElementById('cursos');
+
+        if (resumen && resumen.value.length > 2000) {
+            e.preventDefault();
+            alert('El resumen supera los 2000 caracteres permitidos.');
+            resumen.focus();
+            return;
         }
 
-        .card {
-            padding: .9rem;
-            border-radius: 12px;
+        if (cursos && cursos.value.length > 2000) {
+            e.preventDefault();
+            alert('La sección de cursos supera los 2000 caracteres permitidos.');
+            cursos.focus();
+            return;
         }
+    });
 
-        /* Tipografía de cabecera */
-        .page-header h1 {
-            font-size: 1.25rem;
-        }
-
-        .page-header .muted {
-            font-size: .9rem;
-        }
-
-        /* Breadcrumb con salto de línea */
-        .breadcrumb ul {
-            flex-wrap: wrap;
-            row-gap: .25rem;
-        }
-
-        /* Avatar compacto */
-        .avatar-row {
-            align-items: flex-start;
-            gap: .75rem;
-        }
-
-        .avatar-preview {
-            width: 56px;
-            height: 56px;
-        }
-
-        /* Inputs legibles y sin zoom iOS */
-        .field input,
-        .field select,
-        .field textarea {
-            font-size: 16px;
-            /* evita el auto-zoom en iOS */
-            padding: .65rem .75rem;
-        }
-
-        /* File inputs a todo el ancho */
-        .avatar-actions input[type="file"],
-        #cv {
-            width: 100%;
-        }
-
-        /* Aire en bloques de experiencia */
-        .exp-block {
-            padding: .85rem;
-        }
-    }
-</style>
+});
+</script>
 @endpush
+
+
 @endsection

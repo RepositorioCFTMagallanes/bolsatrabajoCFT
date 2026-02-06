@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Estudiante;
 use App\Models\Postulacion;
-use App\Models\Usuario;
 use Illuminate\Http\Request;
 use App\Services\OfertaRecommendationService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+
 
 class UsuarioController extends Controller
 {
@@ -19,189 +17,177 @@ class UsuarioController extends Controller
     {
         $usuarioId = session('usuario_id');
 
-        if (!$usuarioId || !is_numeric($usuarioId)) {
-            Log::warning('perfil(): sesión inválida', ['usuario_id' => $usuarioId]);
-            return redirect()->route('login');
-        }
+        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
 
-        $usuarioId = (int) $usuarioId;
-
-        // 🔒 Cargar estudiante + usuario (CLAVE)
-        $estudiante = Estudiante::with('usuario')
-            ->where('usuario_id', $usuarioId)
-            ->first();
-
-        if (!$estudiante) {
-            return redirect()->route('usuarios.editar')
-                ->with('error', 'Debes completar tu perfil para continuar.');
-        }
-
-        // Postulaciones
+        // 🔥 Cargar postulaciones para la vista del perfil
         $postulaciones = Postulacion::with(['oferta.empresa'])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('fecha_postulacion', 'desc')
             ->get();
 
+        //  contadores de postulaciones
         $totalPostulaciones = $postulaciones->count();
+
+        // OJO: ajusta 'estado' al nombre real de tu columna
+        // (por ejemplo 'estado_postulacion' si así se llama en tu DB)
         $postulacionesEnAvance = $postulaciones
             ->where('estado_postulacion', '!=', 'Postulado')
             ->count();
 
-        // Recomendadas
+
+        //  Obtener ofertas recomendadas usando el Service
         $ofertasRecomendadas = $service->getRecomendadas($estudiante);
+
+        // contador de ofertas recomendadas
         $totalOfertasRecomendadas = $ofertasRecomendadas->count();
 
-        // URLs públicas GCS
-        $estudiante->avatar_url = $estudiante->avatar
-            ? Storage::disk('gcs')->url($estudiante->avatar)
-            : asset('img/testimonios/test (2).png');
-
-        $estudiante->cv_url = $estudiante->ruta_cv
-            ? Storage::disk('gcs')->url($estudiante->ruta_cv)
-            : null;
-
-        return view('users.perfil', compact(
-            'estudiante',
-            'postulaciones',
-            'ofertasRecomendadas',
-            'totalPostulaciones',
-            'postulacionesEnAvance',
-            'totalOfertasRecomendadas'
-        ));
+        //  Enviar todo a la vista
+        return view('users.perfil', [
+            'estudiante'               => $estudiante,
+            'postulaciones'            => $postulaciones,
+            'ofertasRecomendadas'      => $ofertasRecomendadas,
+            'totalPostulaciones'       => $totalPostulaciones,       // NUEVO
+            'postulacionesEnAvance'    => $postulacionesEnAvance,    // NUEVO
+            'totalOfertasRecomendadas' => $totalOfertasRecomendadas, // NUEVO
+        ]);
     }
 
+
     /**
-     * FORMULARIO EDITAR PERFIL
+     * FORMULARIO PARA EDITAR PERFIL
      */
     public function editar()
     {
         $usuarioId = session('usuario_id');
+        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
 
-        if (!$usuarioId || !is_numeric($usuarioId)) {
-            Log::error('editar(): sesión inválida', ['usuario_id' => $usuarioId]);
-            return redirect()->route('login');
-        }
-
-        $usuarioId = (int) $usuarioId;
-
-        $estudiante = Estudiante::with('usuario')
-            ->where('usuario_id', $usuarioId)
-            ->first();
-
-        if (!$estudiante) {
-            $estudiante = new Estudiante();
-            $estudiante->usuario_id = $usuarioId;
-            $estudiante->save();
-            $estudiante->load('usuario');
-        }
-
-        if (!$estudiante->usuario) {
-            $usuario = Usuario::find($usuarioId);
-            if (!$usuario) {
-                return redirect()->route('login')
-                    ->withErrors('No se pudo cargar el usuario.');
-            }
-            $estudiante->setRelation('usuario', $usuario);
-        }
-
-        // URLs públicas
-        $estudiante->avatar_url = $estudiante->avatar
-            ? Storage::disk('gcs')->url($estudiante->avatar)
-            : asset('img/testimonios/test (2).png');
-
-        $estudiante->cv_url = $estudiante->ruta_cv
-            ? Storage::disk('gcs')->url($estudiante->ruta_cv)
-            : null;
-
-        return view('users.editar', compact('estudiante'));
+        return view('users.editar', [
+            'estudiante' => $estudiante,
+        ]);
     }
 
-    /**
-     * UPDATE PERFIL
-     */
     public function update(Request $request)
     {
         $usuarioId = session('usuario_id');
 
-        if (!$usuarioId || !is_numeric($usuarioId)) {
-            return redirect()->route('login');
-        }
+        // ===========================
+        // 1. OBTENER MODELOS
+        // ===========================
+        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
+        $usuario = $estudiante->usuario;
 
-        $usuarioId = (int) $usuarioId;
-
-        $estudiante = Estudiante::with('usuario')
-            ->where('usuario_id', $usuarioId)
-            ->first();
-
-        if (!$estudiante) {
-            $estudiante = new Estudiante();
-            $estudiante->usuario_id = $usuarioId;
-            $estudiante->save();
-            $estudiante->load('usuario');
-        }
-
-        $usuario = $estudiante->usuario ?: Usuario::find($usuarioId);
-        if (!$usuario) {
-            return redirect()->route('login');
-        }
-
+        // ===========================
+        // 2. VALIDAR DATOS
+        // ===========================
         $request->validate([
-            'nombre'   => 'sometimes|nullable|string|max:150',
-            'apellido' => 'sometimes|nullable|string|max:150',
-            'email'    => 'sometimes|nullable|email|max:150',
-            'run'      => 'sometimes|nullable|string|max:20',
-            'telefono' => 'sometimes|nullable|string|max:50',
-            'avatar'   => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'cv'       => 'sometimes|nullable|mimes:pdf|max:4096',
-        ]);
+    'nombre'   => 'required|string|max:150',
+    'apellido' => 'required|string|max:150',
+    'email'    => 'required|email|max:150',
 
-        $usuario->update($request->only(['nombre', 'apellido', 'email']));
+    'run'            => 'nullable|string|max:20',
+    'estado'         => 'nullable|string|max:50',
+    'titulo'         => 'nullable|string|max:255',
+    'telefono'       => 'nullable|string|max:50',
+    'ciudad'         => 'nullable|string|max:150',
+    'resumen'        => 'nullable|string|max:2000',
+    'institucion'    => 'nullable|string|max:255',
+    'anio_egreso'    => 'nullable|integer|min:1990|max:2099',
+    'cursos'         => 'nullable|string|max:2000',
 
-        $estudiante->fill($request->except([
-            'nombre', 'apellido', 'email', 'avatar', 'cv'
-        ]));
+    'linkedin'       => 'nullable|url|max:255',
+    'portfolio'      => 'nullable|url|max:255',
 
-        // Avatar
+    'area'           => 'nullable|integer',
+    'jornada'        => 'nullable|integer',
+    'modalidad'      => 'nullable|integer',
+
+    'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    'cv'     => 'nullable|mimes:pdf|max:4096',
+], [
+    'resumen.max' => 'El resumen no puede superar los 2000 caracteres.',
+    'cursos.max'  => 'La sección de cursos no puede superar los 2000 caracteres.',
+]);
+
+
+        // ===========================
+        // 3. ACTUALIZAR USUARIO
+        // ===========================
+        $usuario->nombre   = $request->nombre;
+        $usuario->apellido = $request->apellido;
+        $usuario->email    = $request->email;
+        $usuario->save();
+
+        // ===========================
+        // 4. ACTUALIZAR ESTUDIANTE
+        // ===========================
+        $estudiante->run                     = $request->run;
+        $estudiante->estado_carrera         = $request->estado;
+        $estudiante->carrera                = $request->titulo;
+        $estudiante->telefono               = $request->telefono;
+        $estudiante->ciudad                 = $request->ciudad;
+        $estudiante->resumen                = $request->resumen;
+        $estudiante->institucion            = $request->institucion;
+        $estudiante->anio_egreso            = $request->anio_egreso;
+        $estudiante->cursos                 = $request->cursos;
+
+        $estudiante->linkedin_url           = $request->linkedin;
+        $estudiante->portfolio_url          = $request->portfolio;
+
+        $estudiante->area_interes_id        = $request->area;
+        $estudiante->jornada_preferencia_id = $request->jornada;
+        $estudiante->modalidad_preferencia_id = $request->modalidad;
+
+        // ===========================
+        // 5. MANEJO DE AVATAR
+        // ===========================
         if ($request->hasFile('avatar')) {
-            $path = 'estudiantes/avatars/' . $usuarioId . '_' . time() . '.' .
-                $request->file('avatar')->getClientOriginalExtension();
 
-            Storage::disk('gcs')->put($path, file_get_contents($request->file('avatar')), 'public');
-            $estudiante->avatar = $path;
+            // borrar avatar anterior
+            if ($estudiante->avatar && file_exists(public_path($estudiante->avatar))) {
+                unlink(public_path($estudiante->avatar));
+            }
+
+            $archivo = $request->file('avatar');
+            $nombre = uniqid() . '.' . $archivo->getClientOriginalExtension();
+            $archivo->move(public_path('uploads/avatars'), $nombre);
+
+            $estudiante->avatar = 'uploads/avatars/' . $nombre;
         }
 
-        // CV
+        // ===========================
+        // 6. MANEJO DE CV
+        // ===========================
         if ($request->hasFile('cv')) {
-            $path = 'estudiantes/cv/' . $usuarioId . '_' . time() . '.pdf';
-            Storage::disk('gcs')->put($path, file_get_contents($request->file('cv')), 'public');
-            $estudiante->ruta_cv = $path;
+
+            // borrar CV anterior
+            if ($estudiante->ruta_cv && file_exists(public_path($estudiante->ruta_cv))) {
+                unlink(public_path($estudiante->ruta_cv));
+            }
+
+            $archivo = $request->file('cv');
+            $nombre = time() . '_' . $archivo->getClientOriginalName();
+            $archivo->move(public_path('uploads/cv'), $nombre);
+
+            $estudiante->ruta_cv = 'uploads/cv/' . $nombre;
         }
 
         $estudiante->save();
 
-        return redirect()->route('usuarios.perfil')
-            ->with('success', 'Perfil actualizado correctamente.');
+        // ===========================
+        // 7. REDIRIGIR
+        // ===========================
+        return redirect('/usuarios/perfil')->with('success', 'Perfil actualizado correctamente.');
     }
 
     /**
-     * POSTULACIONES
+     * LISTA DE POSTULACIONES DEL USUARIO
      */
     public function postulaciones()
     {
         $usuarioId = session('usuario_id');
+        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
 
-        if (!$usuarioId || !is_numeric($usuarioId)) {
-            return redirect()->route('login');
-        }
-
-        $estudiante = Estudiante::with('usuario')
-            ->where('usuario_id', (int)$usuarioId)
-            ->first();
-
-        if (!$estudiante) {
-            return redirect()->route('usuarios.editar');
-        }
-
+        // 🔥 Cargar postulaciones reales
         $postulaciones = Postulacion::with(['oferta.empresa'])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('fecha_postulacion', 'desc')
