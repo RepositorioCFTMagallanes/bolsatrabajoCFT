@@ -6,15 +6,22 @@
 @php
 use Illuminate\Support\Facades\Storage;
 
-// Avatar
-$avatarUrl = $estudiante->avatar
-    ? Storage::disk('gcs')->url($estudiante->avatar)
-    : asset('img/default-avatar.png');
+$avatarUrl = asset('img/default-avatar.png');
+$cvUrl = null;
 
-// CV
-$cvUrl = $estudiante->ruta_cv
-    ? Storage::disk('gcs')->url($estudiante->ruta_cv)
-    : null;
+try {
+    if (!empty($estudiante->avatar)) {
+        $avatarUrl = Storage::disk('gcs')->url($estudiante->avatar);
+    }
+
+    if (!empty($estudiante->ruta_cv)) {
+        $cvUrl = Storage::disk('gcs')->url($estudiante->ruta_cv);
+    }
+} catch (\Throwable $e) {
+    // fallback silencioso si falla GCS
+    $avatarUrl = asset('img/default-avatar.png');
+    $cvUrl = null;
+}
 @endphp
 
 
@@ -115,9 +122,15 @@ $cvUrl = $estudiante->ruta_cv
                     ? date('d-m-Y', strtotime($postulacion->fecha_postulacion))
                     : null;
 
-                $logoUrl = $empresa && $empresa->ruta_logo
-                    ? Storage::disk('gcs')->url($empresa->ruta_logo)
-                    : asset('img/empresas/empresa (3).png');
+                $logoUrl = asset('img/empresas/empresa (3).png');
+
+                try {
+                    if ($empresa && $empresa->ruta_logo) {
+                        $logoUrl = Storage::disk('gcs')->url($empresa->ruta_logo);
+                    }
+                } catch (\Throwable $e) {
+                    $logoUrl = asset('img/empresas/empresa (3).png');
+                }
             @endphp
 
             <article class="card job-card">
@@ -166,9 +179,15 @@ $cvUrl = $estudiante->ruta_cv
             @php
                 $empresa = $oferta->empresa;
 
-                $logoUrl = $empresa && $empresa->ruta_logo
-                    ? Storage::disk('gcs')->url($empresa->ruta_logo)
-                    : asset('img/empresas/empresa (4).png');
+                $logoUrl = asset('img/empresas/empresa (4).png');
+
+                try {
+                    if ($empresa && $empresa->ruta_logo) {
+                        $logoUrl = Storage::disk('gcs')->url($empresa->ruta_logo);
+                    }
+                } catch (\Throwable $e) {
+                    $logoUrl = asset('img/empresas/empresa (4).png');
+                }
             @endphp
 
             <article class="card job-card">
