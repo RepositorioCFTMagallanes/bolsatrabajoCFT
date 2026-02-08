@@ -1,3 +1,6 @@
+@extends('layouts.app')
+
+@section('content')
 @php
 use Illuminate\Support\Facades\Storage;
 
@@ -5,11 +8,11 @@ $avatarUrl = asset('img/testimonios/test (2).png');
 $cvUrl = null;
 
 try {
-    if ($estudiante && !empty($estudiante->avatar)) {
+    if (isset($estudiante) && $estudiante && !empty($estudiante->avatar)) {
         $avatarUrl = Storage::disk('gcs')->url($estudiante->avatar);
     }
 
-    if ($estudiante && !empty($estudiante->ruta_cv)) {
+    if (isset($estudiante) && $estudiante && !empty($estudiante->ruta_cv)) {
         $cvUrl = Storage::disk('gcs')->url($estudiante->ruta_cv);
     }
 } catch (\Throwable $e) {
@@ -18,7 +21,6 @@ try {
     $cvUrl = null;
 }
 @endphp
-
 
 <main class="container user-edit">
 
@@ -48,7 +50,6 @@ try {
             </ul>
         </div>
         @endif
-
 
         {{-- IDENTIDAD --}}
         <section class="card">
@@ -95,15 +96,15 @@ try {
                             <label for="estado">Estado carrera</label>
                             <select id="estado" name="estado">
                                 <option value="Egresado/a"
-                                    {{ $estudiante->estado_carrera == 'Egresado/a' ? 'selected' : '' }}>
+                                    {{ ($estudiante->estado_carrera ?? '') == 'Egresado/a' ? 'selected' : '' }}>
                                     Egresado/a
                                 </option>
                                 <option value="Estudiante"
-                                    {{ $estudiante->estado_carrera == 'Estudiante' ? 'selected' : '' }}>
+                                    {{ ($estudiante->estado_carrera ?? '') == 'Estudiante' ? 'selected' : '' }}>
                                     Estudiante
                                 </option>
                                 <option value="Titulado(a)"
-                                    {{ $estudiante->estado_carrera == 'Titulado(a)' ? 'selected' : '' }}>
+                                    {{ ($estudiante->estado_carrera ?? '') == 'Titulado(a)' ? 'selected' : '' }}>
                                     Titulado/a
                                 </option>
                             </select>
@@ -118,7 +119,6 @@ try {
                 </div>
             </div>
         </section>
-
 
         {{-- CONTACTO --}}
         <section class="card">
@@ -143,9 +143,7 @@ try {
 
             <div class="field">
                 <label for="resumen">Resumen</label>
-                <textarea id="resumen" name="resumen" rows="3" maxlength="2000">
-{{ $estudiante->resumen ?? '' }}
-</textarea>
+                <textarea id="resumen" name="resumen" rows="3" maxlength="2000">{{ $estudiante->resumen ?? '' }}</textarea>
 
                 <span class="hint">
                     Máximo: 2000 caracteres.
@@ -153,7 +151,6 @@ try {
                 </span>
             </div>
         </section>
-
 
         {{-- FORMACIÓN --}}
         <section class="card">
@@ -172,7 +169,6 @@ try {
             </div>
         </section>
 
-
         {{-- CV --}}
         <section class="card">
             <h2>CV</h2>
@@ -188,7 +184,6 @@ try {
                 @endif
             </div>
         </section>
-
 
         {{-- ACCIONES --}}
         <div class="form-actions">

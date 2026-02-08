@@ -67,12 +67,15 @@ class UsuarioController extends Controller
             return redirect('/login');
         }
 
-        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
+        $estudiante = Estudiante::with('usuario')
+            ->where('usuario_id', $usuarioId)
+            ->first();
 
         return view('users.editar', [
             'estudiante' => $estudiante,
         ]);
     }
+
 
     /**
      * ACTUALIZAR PERFIL
@@ -85,13 +88,22 @@ class UsuarioController extends Controller
             return redirect('/login');
         }
 
-        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
+       $estudiante = Estudiante::with('usuario')
+    ->where('usuario_id', $usuarioId)
+    ->first();
+
 
         if (!$estudiante) {
             return redirect('/usuarios/editar');
         }
 
         $usuario = $estudiante->usuario;
+
+        if (!$usuario) {
+            return redirect('/usuarios/editar')
+                ->with('error', 'Error al cargar el usuario.');
+        }
+
 
         // ===========================
         // VALIDACIÓN
