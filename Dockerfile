@@ -39,9 +39,23 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # =====================================================
-# Copiar código del proyecto
+# Copiar composer primero (para cache correcto)
+# =====================================================
+COPY composer.json composer.lock /var/www/html/
+
+# Instalar dependencias
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-progress \
+    --no-interaction \
+    --optimize-autoloader
+
+# =====================================================
+# Copiar el resto del proyecto
 # =====================================================
 COPY . /var/www/html
+
 
 # =====================================================
 # Apache → DocumentRoot = /public
@@ -64,15 +78,6 @@ RUN printf '<Directory ${APACHE_DOCUMENT_ROOT}>\n\
     > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
 
-# =====================================================
-# Instalar dependencias PHP del proyecto
-# =====================================================
-RUN composer install \
-    --no-dev \
-    --prefer-dist \
-    --no-progress \
-    --no-interaction \
-    --optimize-autoloader
     
 # =====================================================
 # Permisos correctos para Laravel
