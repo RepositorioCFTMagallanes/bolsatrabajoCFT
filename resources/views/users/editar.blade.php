@@ -51,6 +51,7 @@ try {
         </div>
         @endif
 
+
         {{-- IDENTIDAD --}}
         <section class="card">
             <h2>Identidad</h2>
@@ -120,6 +121,7 @@ try {
             </div>
         </section>
 
+
         {{-- CONTACTO --}}
         <section class="card">
             <h2>Contacto</h2>
@@ -152,6 +154,7 @@ try {
             </div>
         </section>
 
+
         {{-- FORMACIÓN --}}
         <section class="card">
             <h2>Formación</h2>
@@ -169,6 +172,7 @@ try {
             </div>
         </section>
 
+
         {{-- CV --}}
         <section class="card">
             <h2>CV</h2>
@@ -184,6 +188,7 @@ try {
                 @endif
             </div>
         </section>
+
 
         {{-- ACCIONES --}}
         <div class="form-actions">
