@@ -38,10 +38,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # =====================================================
 WORKDIR /var/www/html
 
-# =====================================================
-# Copiar composer primero (para cache correcto)
-# =====================================================
-COPY composer.json composer.lock /var/www/html/
+# Copiar todo el proyecto
+COPY . /var/www/html
 
 # Instalar dependencias
 RUN composer install \
@@ -51,10 +49,6 @@ RUN composer install \
     --no-interaction \
     --optimize-autoloader
 
-# =====================================================
-# Copiar el resto del proyecto
-# =====================================================
-COPY . /var/www/html
 
 
 # =====================================================
