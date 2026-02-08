@@ -50,10 +50,15 @@ return [
             'driver' => 'gcs',
             'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
-            'path_prefix' => null,
+            'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', null),
             'visibility' => 'public',
             'throw' => false,
+
+            // IMPORTANTE
+            'key_file' => env('GOOGLE_CLOUD_KEY_FILE', null),
+            'storage_api_uri' => null,
         ],
+
 
 
         's3' => [
