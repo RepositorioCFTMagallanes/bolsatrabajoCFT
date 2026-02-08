@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
 
             $bucket = $storageClient->bucket($config['bucket']);
 
-            $adapter = new GoogleCloudStorageAdapter($storageClient, $bucket);
+            $adapter = new GoogleCloudStorageAdapter($bucket);
 
             $filesystem = new Filesystem($adapter);
 
