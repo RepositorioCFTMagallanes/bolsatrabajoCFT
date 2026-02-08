@@ -167,37 +167,34 @@ class UsuarioController extends Controller
         // ===========================
         // AVATAR EN GCS
         // ===========================
-        if ($request->hasFile('avatar')) {
+        if ($request->file('avatar')) {
 
             if (!empty($estudiante->avatar)) {
                 Storage::disk('gcs')->delete($estudiante->avatar);
             }
 
-            $path = Storage::disk('gcs')->putFile('avatars', $request->file('avatar'));
+            $file = $request->file('avatar');
+            $path = Storage::disk('gcs')->putFile('avatars', $file);
+
             $estudiante->avatar = $path;
-        } else {
-            // Si nunca tuvo avatar, dejarlo null
-            if ($estudiante->avatar == 0) {
-                $estudiante->avatar = null;
-            }
         }
+
 
         // ===========================
         // CV EN GCS
         // ===========================
-        if ($request->hasFile('cv')) {
+        if ($request->file('cv')) {
 
             if (!empty($estudiante->ruta_cv)) {
                 Storage::disk('gcs')->delete($estudiante->ruta_cv);
             }
 
-            $path = Storage::disk('gcs')->putFile('cv', $request->file('cv'));
+            $file = $request->file('cv');
+            $path = Storage::disk('gcs')->putFile('cv', $file);
+
             $estudiante->ruta_cv = $path;
-        } else {
-            if ($estudiante->ruta_cv == 0) {
-                $estudiante->ruta_cv = null;
-            }
         }
+
 
 
 
