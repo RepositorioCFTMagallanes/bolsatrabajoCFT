@@ -88,9 +88,9 @@ class UsuarioController extends Controller
             return redirect('/login');
         }
 
-       $estudiante = Estudiante::with('usuario')
-    ->where('usuario_id', $usuarioId)
-    ->first();
+        $estudiante = Estudiante::with('usuario')
+            ->where('usuario_id', $usuarioId)
+            ->first();
 
 
         if (!$estudiante) {
@@ -164,18 +164,22 @@ class UsuarioController extends Controller
         $estudiante->area_interes_id        = $request->area;
         $estudiante->jornada_preferencia_id = $request->jornada;
         $estudiante->modalidad_preferencia_id = $request->modalidad;
-
         // ===========================
         // AVATAR EN GCS
         // ===========================
         if ($request->hasFile('avatar')) {
 
-            if ($estudiante->avatar) {
+            if (!empty($estudiante->avatar)) {
                 Storage::disk('gcs')->delete($estudiante->avatar);
             }
 
             $path = Storage::disk('gcs')->putFile('avatars', $request->file('avatar'));
             $estudiante->avatar = $path;
+        } else {
+            // Si nunca tuvo avatar, dejarlo null
+            if ($estudiante->avatar == 0) {
+                $estudiante->avatar = null;
+            }
         }
 
         // ===========================
@@ -183,13 +187,19 @@ class UsuarioController extends Controller
         // ===========================
         if ($request->hasFile('cv')) {
 
-            if ($estudiante->ruta_cv) {
+            if (!empty($estudiante->ruta_cv)) {
                 Storage::disk('gcs')->delete($estudiante->ruta_cv);
             }
 
             $path = Storage::disk('gcs')->putFile('cv', $request->file('cv'));
             $estudiante->ruta_cv = $path;
+        } else {
+            if ($estudiante->ruta_cv == 0) {
+                $estudiante->ruta_cv = null;
+            }
         }
+
+
 
         $estudiante->save();
 
