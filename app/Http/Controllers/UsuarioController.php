@@ -120,81 +120,91 @@ class UsuarioController extends Controller
 
         try {
 
+            // =========================
             // ACTUALIZAR USUARIO
+            // =========================
             $usuario->update([
                 'nombre'   => $request->nombre,
                 'apellido' => $request->apellido,
                 'email'    => $request->email,
             ]);
 
+            // =========================
             // ACTUALIZAR ESTUDIANTE
+            // =========================
             $estudiante->fill([
-                'run'                     => $request->run,
-                'estado_carrera'          => $request->estado,
-                'carrera'                 => $request->titulo,
-                'telefono'                => $request->telefono,
-                'ciudad'                  => $request->ciudad,
-                'resumen'                 => $request->resumen,
-                'institucion'             => $request->institucion,
-                'anio_egreso'             => $request->anio_egreso,
-                'cursos'                  => $request->cursos,
-                'linkedin_url'            => $request->linkedin,
-                'portfolio_url'           => $request->portfolio,
-                'area_interes_id'         => $request->area,
-                'jornada_preferencia_id'  => $request->jornada,
-                'modalidad_preferencia_id'=> $request->modalidad,
+                'run'                      => $request->run,
+                'estado_carrera'           => $request->estado,
+                'carrera'                  => $request->titulo,
+                'telefono'                 => $request->telefono,
+                'ciudad'                   => $request->ciudad,
+                'resumen'                  => $request->resumen,
+                'institucion'              => $request->institucion,
+                'anio_egreso'              => $request->anio_egreso,
+                'cursos'                   => $request->cursos,
+                'linkedin_url'             => $request->linkedin,
+                'portfolio_url'            => $request->portfolio,
+                'area_interes_id'          => $request->area,
+                'jornada_preferencia_id'   => $request->jornada,
+                'modalidad_preferencia_id' => $request->modalidad,
             ]);
 
-            /*
-            ==========================================
-            AVATAR EN GCS
-            ==========================================
-            */
+            // =========================
+            // AVATAR EN GCS
+            // =========================
             if ($request->hasFile('avatar')) {
+                try {
+                    $newPath = Storage::disk('gcs')->putFile(
+                        'avatars',
+                        $request->file('avatar'),
+                        ['visibility' => 'public']
+                    );
 
-                if (!empty($estudiante->avatar)) {
-                    Storage::disk('gcs')->delete($estudiante->avatar);
+                    if ($newPath) {
+
+                        if (!empty($estudiante->avatar) && $estudiante->avatar !== '0') {
+                            Storage::disk('gcs')->delete($estudiante->avatar);
+                        }
+
+                        $estudiante->avatar = $newPath;
+
+                        Log::info('Avatar subido', ['path' => $newPath]);
+                    }
+
+                } catch (\Throwable $e) {
+                    Log::error('Error subiendo avatar', [
+                        'error' => $e->getMessage()
+                    ]);
                 }
-
-                $path = Storage::disk('gcs')->putFile(
-                    'avatars',
-                    $request->file('avatar'),
-                    ['visibility' => 'public']
-                );
-
-                if (!$path) {
-                    throw new \Exception('No se pudo subir el avatar a GCS');
-                }
-
-                $estudiante->avatar = $path;
-
-                Log::info('Avatar subido correctamente', ['path' => $path]);
             }
 
-            /*
-            ==========================================
-            CV EN GCS
-            ==========================================
-            */
+            // =========================
+            // CV EN GCS
+            // =========================
             if ($request->hasFile('cv')) {
+                try {
+                    $newPath = Storage::disk('gcs')->putFile(
+                        'cv',
+                        $request->file('cv'),
+                        ['visibility' => 'public']
+                    );
 
-                if (!empty($estudiante->ruta_cv)) {
-                    Storage::disk('gcs')->delete($estudiante->ruta_cv);
+                    if ($newPath) {
+
+                        if (!empty($estudiante->ruta_cv)) {
+                            Storage::disk('gcs')->delete($estudiante->ruta_cv);
+                        }
+
+                        $estudiante->ruta_cv = $newPath;
+
+                        Log::info('CV subido', ['path' => $newPath]);
+                    }
+
+                } catch (\Throwable $e) {
+                    Log::error('Error subiendo CV', [
+                        'error' => $e->getMessage()
+                    ]);
                 }
-
-                $path = Storage::disk('gcs')->putFile(
-                    'cv',
-                    $request->file('cv'),
-                    ['visibility' => 'public']
-                );
-
-                if (!$path) {
-                    throw new \Exception('No se pudo subir el CV a GCS');
-                }
-
-                $estudiante->ruta_cv = $path;
-
-                Log::info('CV subido correctamente', ['path' => $path]);
             }
 
             $estudiante->save();
@@ -212,7 +222,7 @@ class UsuarioController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->with('error', 'Error al guardar el perfil. Intenta nuevamente.');
+            return back()->with('error', 'Error al guardar el perfil.');
         }
     }
 
