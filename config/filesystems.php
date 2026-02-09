@@ -52,6 +52,7 @@ return [
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
             'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', null),
             'visibility' => 'public',
+            'url' => env('GOOGLE_CLOUD_STORAGE_URL'), // ← ESTA LÍNEA FALTA
             'key_file' => null,
             'throw' => false,
         ],

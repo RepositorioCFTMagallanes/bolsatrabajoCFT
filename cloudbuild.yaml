@@ -65,7 +65,9 @@ steps:
         LOG_LEVEL=debug,
         GOOGLE_CLOUD_PROJECT_ID=${_AR_PROJECT_ID},
         GOOGLE_CLOUD_STORAGE_BUCKET=magallanes-portal-files-prod,
+        GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod,
         FILESYSTEM_DISK=gcs
+
 
 
       # Secret env vars (pulled from Secret Manager every deploy)
