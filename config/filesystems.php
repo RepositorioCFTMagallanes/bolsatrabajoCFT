@@ -53,7 +53,7 @@ return [
             'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', null),
             'visibility' => 'public',
             'key_file' => null,
-            'throw' => false,
+            'throw' => true,
         ],
 
 
