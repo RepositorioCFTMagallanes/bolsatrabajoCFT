@@ -70,8 +70,8 @@
             <div class="user-actions">
                 <a href="{{ url('/usuarios/editar') }}" class="btn btn-primary">Editar Perfil</a>
 
-                @if (!empty($estudiante->ruta_cv))
-                <a href="{{ Storage::disk('gcs')->url($estudiante->ruta_cv) }}"
+                @if ($cvUrl)
+                <a href="{{ $cvUrl }}"
                     target="_blank"
                     class="btn btn-outline">
                     Ver CV
