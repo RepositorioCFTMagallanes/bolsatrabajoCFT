@@ -167,33 +167,39 @@ class UsuarioController extends Controller
         // ===========================
         // AVATAR EN GCS
         // ===========================
-        if ($request->file('avatar')) {
+        if ($request->hasFile('avatar')) {
+            try {
+                if (!empty($estudiante->avatar)) {
+                    Storage::disk('gcs')->delete($estudiante->avatar);
+                }
 
-            if (!empty($estudiante->avatar)) {
-                Storage::disk('gcs')->delete($estudiante->avatar);
+                $file = $request->file('avatar');
+                $path = Storage::disk('gcs')->putFile('avatars', $file);
+
+                $estudiante->avatar = $path;
+            } catch (\Exception $e) {
+                // Evita error 500 si falla GCS
             }
-
-            $file = $request->file('avatar');
-            $path = Storage::disk('gcs')->putFile('avatars', $file);
-
-            $estudiante->avatar = $path;
         }
-
 
         // ===========================
         // CV EN GCS
         // ===========================
-        if ($request->file('cv')) {
+        if ($request->hasFile('cv')) {
+            try {
+                if (!empty($estudiante->ruta_cv)) {
+                    Storage::disk('gcs')->delete($estudiante->ruta_cv);
+                }
 
-            if (!empty($estudiante->ruta_cv)) {
-                Storage::disk('gcs')->delete($estudiante->ruta_cv);
+                $file = $request->file('cv');
+                $path = Storage::disk('gcs')->putFile('cv', $file);
+
+                $estudiante->ruta_cv = $path;
+            } catch (\Exception $e) {
+                // Evita error 500 si falla GCS
             }
-
-            $file = $request->file('cv');
-            $path = Storage::disk('gcs')->putFile('cv', $file);
-
-            $estudiante->ruta_cv = $path;
         }
+
 
 
 
