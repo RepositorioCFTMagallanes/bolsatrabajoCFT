@@ -6,6 +6,8 @@ use App\Models\Estudiante;
 use App\Models\Postulacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\OfertaRecommendationService;
 
 class UsuarioController extends Controller
@@ -17,42 +19,31 @@ class UsuarioController extends Controller
     {
         $usuarioId = session('usuario_id');
 
-        // Protección de sesión
         if (!$usuarioId) {
             return redirect('/login')->with('error', 'Sesión expirada. Inicia sesión nuevamente.');
         }
 
         $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
 
-        // Protección si no existe perfil estudiante
         if (!$estudiante) {
             return redirect('/usuarios/editar')
                 ->with('error', 'Debes completar tu perfil antes de continuar.');
         }
 
-        // Cargar postulaciones
         $postulaciones = Postulacion::with(['oferta.empresa'])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('fecha_postulacion', 'desc')
             ->get();
 
-        $totalPostulaciones = $postulaciones->count();
-
-        $postulacionesEnAvance = $postulaciones
-            ->where('estado_postulacion', '!=', 'Postulado')
-            ->count();
-
-        // Ofertas recomendadas
         $ofertasRecomendadas = $service->getRecomendadas($estudiante);
-        $totalOfertasRecomendadas = $ofertasRecomendadas->count();
 
         return view('users.perfil', [
             'estudiante'               => $estudiante,
             'postulaciones'            => $postulaciones,
             'ofertasRecomendadas'      => $ofertasRecomendadas,
-            'totalPostulaciones'       => $totalPostulaciones,
-            'postulacionesEnAvance'    => $postulacionesEnAvance,
-            'totalOfertasRecomendadas' => $totalOfertasRecomendadas,
+            'totalPostulaciones'       => $postulaciones->count(),
+            'postulacionesEnAvance'    => $postulaciones->where('estado_postulacion', '!=', 'Postulado')->count(),
+            'totalOfertasRecomendadas' => $ofertasRecomendadas->count(),
         ]);
     }
 
@@ -76,7 +67,6 @@ class UsuarioController extends Controller
         ]);
     }
 
-
     /**
      * ACTUALIZAR PERFIL
      */
@@ -90,12 +80,7 @@ class UsuarioController extends Controller
 
         $estudiante = Estudiante::with('usuario')
             ->where('usuario_id', $usuarioId)
-            ->first();
-
-
-        if (!$estudiante) {
-            return redirect('/usuarios/editar');
-        }
+            ->firstOrFail();
 
         $usuario = $estudiante->usuario;
 
@@ -104,10 +89,7 @@ class UsuarioController extends Controller
                 ->with('error', 'Error al cargar el usuario.');
         }
 
-
-        // ===========================
         // VALIDACIÓN
-        // ===========================
         $request->validate([
             'nombre'   => 'required|string|max:150',
             'apellido' => 'required|string|max:150',
@@ -132,43 +114,44 @@ class UsuarioController extends Controller
 
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'cv'     => 'nullable|mimes:pdf|max:4096',
-        ], [
-            'resumen.max' => 'El resumen no puede superar los 2000 caracteres.',
-            'cursos.max'  => 'La sección de cursos no puede superar los 2000 caracteres.',
         ]);
 
-        // ===========================
-        // ACTUALIZAR USUARIO
-        // ===========================
-        $usuario->nombre   = $request->nombre;
-        $usuario->apellido = $request->apellido;
-        $usuario->email    = $request->email;
-        $usuario->save();
+        DB::beginTransaction();
 
-        // ===========================
-        // ACTUALIZAR ESTUDIANTE
-        // ===========================
-        $estudiante->run                     = $request->run;
-        $estudiante->estado_carrera         = $request->estado;
-        $estudiante->carrera                = $request->titulo;
-        $estudiante->telefono               = $request->telefono;
-        $estudiante->ciudad                 = $request->ciudad;
-        $estudiante->resumen                = $request->resumen;
-        $estudiante->institucion            = $request->institucion;
-        $estudiante->anio_egreso            = $request->anio_egreso;
-        $estudiante->cursos                 = $request->cursos;
+        try {
 
-        $estudiante->linkedin_url           = $request->linkedin;
-        $estudiante->portfolio_url          = $request->portfolio;
+            // ACTUALIZAR USUARIO
+            $usuario->update([
+                'nombre'   => $request->nombre,
+                'apellido' => $request->apellido,
+                'email'    => $request->email,
+            ]);
 
-        $estudiante->area_interes_id        = $request->area;
-        $estudiante->jornada_preferencia_id = $request->jornada;
-        $estudiante->modalidad_preferencia_id = $request->modalidad;
-        // ===========================
-        // AVATAR EN GCS
-        // ===========================
-        if ($request->hasFile('avatar')) {
-            try {
+            // ACTUALIZAR ESTUDIANTE
+            $estudiante->fill([
+                'run'                     => $request->run,
+                'estado_carrera'          => $request->estado,
+                'carrera'                 => $request->titulo,
+                'telefono'                => $request->telefono,
+                'ciudad'                  => $request->ciudad,
+                'resumen'                 => $request->resumen,
+                'institucion'             => $request->institucion,
+                'anio_egreso'             => $request->anio_egreso,
+                'cursos'                  => $request->cursos,
+                'linkedin_url'            => $request->linkedin,
+                'portfolio_url'           => $request->portfolio,
+                'area_interes_id'         => $request->area,
+                'jornada_preferencia_id'  => $request->jornada,
+                'modalidad_preferencia_id'=> $request->modalidad,
+            ]);
+
+            /*
+            ==========================================
+            AVATAR EN GCS
+            ==========================================
+            */
+            if ($request->hasFile('avatar')) {
+
                 if (!empty($estudiante->avatar)) {
                     Storage::disk('gcs')->delete($estudiante->avatar);
                 }
@@ -176,22 +159,25 @@ class UsuarioController extends Controller
                 $path = Storage::disk('gcs')->putFile(
                     'avatars',
                     $request->file('avatar'),
-                    'public'
+                    ['visibility' => 'public']
                 );
 
+                if (!$path) {
+                    throw new \Exception('No se pudo subir el avatar a GCS');
+                }
+
                 $estudiante->avatar = $path;
-            } catch (\Exception $e) {
-                \Log::error('Error subiendo avatar: ' . $e->getMessage());
+
+                Log::info('Avatar subido correctamente', ['path' => $path]);
             }
-        }
 
+            /*
+            ==========================================
+            CV EN GCS
+            ==========================================
+            */
+            if ($request->hasFile('cv')) {
 
-
-        // ===========================
-        // CV EN GCS
-        // ===========================
-        if ($request->hasFile('cv')) {
-            try {
                 if (!empty($estudiante->ruta_cv)) {
                     Storage::disk('gcs')->delete($estudiante->ruta_cv);
                 }
@@ -199,21 +185,35 @@ class UsuarioController extends Controller
                 $path = Storage::disk('gcs')->putFile(
                     'cv',
                     $request->file('cv'),
-                    'public'
+                    ['visibility' => 'public']
                 );
 
+                if (!$path) {
+                    throw new \Exception('No se pudo subir el CV a GCS');
+                }
+
                 $estudiante->ruta_cv = $path;
-            } catch (\Exception $e) {
-                \Log::error('Error subiendo CV: ' . $e->getMessage());
+
+                Log::info('CV subido correctamente', ['path' => $path]);
             }
+
+            $estudiante->save();
+
+            DB::commit();
+
+            return redirect('/usuarios/perfil')
+                ->with('success', 'Perfil actualizado correctamente.');
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            Log::error('Error actualizando perfil', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Error al guardar el perfil. Intenta nuevamente.');
         }
-
-
-
-        $estudiante->save();
-
-        return redirect('/usuarios/perfil')
-            ->with('success', 'Perfil actualizado correctamente.');
     }
 
     /**
