@@ -174,9 +174,14 @@ class UsuarioController extends Controller
                 }
 
                 $file = $request->file('avatar');
-                $path = Storage::disk('gcs')->putFile('avatars', $file);
+                $filename = 'avatar_' . time() . '.' . $file->getClientOriginalExtension();
 
-                $estudiante->avatar = $path;
+                Storage::disk('gcs')->put(
+                    'avatars/' . $filename,
+                    file_get_contents($file->getRealPath())
+                );
+
+                $estudiante->avatar = 'avatars/' . $filename;
             } catch (\Exception $e) {
                 // Evita error 500 si falla GCS
             }
@@ -192,9 +197,14 @@ class UsuarioController extends Controller
                 }
 
                 $file = $request->file('cv');
-                $path = Storage::disk('gcs')->putFile('cv', $file);
+                $filename = 'cv_' . time() . '.' . $file->getClientOriginalExtension();
 
-                $estudiante->ruta_cv = $path;
+                Storage::disk('gcs')->put(
+                    'cv/' . $filename,
+                    file_get_contents($file->getRealPath())
+                );
+
+                $estudiante->ruta_cv = 'cv/' . $filename;
             } catch (\Exception $e) {
                 // Evita error 500 si falla GCS
             }
