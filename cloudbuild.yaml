@@ -98,7 +98,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 # ===============================
-# Substitution variables
+# Substitucion variables
 # ===============================
 substitutions:
   _AR_HOSTNAME: us-central1-docker.pkg.dev
