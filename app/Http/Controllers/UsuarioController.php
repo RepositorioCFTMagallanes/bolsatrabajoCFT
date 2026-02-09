@@ -173,19 +173,18 @@ class UsuarioController extends Controller
                     Storage::disk('gcs')->delete($estudiante->avatar);
                 }
 
-                $file = $request->file('avatar');
-                $filename = 'avatar_' . time() . '.' . $file->getClientOriginalExtension();
-
-                Storage::disk('gcs')->put(
-                    'avatars/' . $filename,
-                    file_get_contents($file->getRealPath())
+                $path = Storage::disk('gcs')->putFile(
+                    'avatars',
+                    $request->file('avatar'),
+                    'public'
                 );
 
-                $estudiante->avatar = 'avatars/' . $filename;
+                $estudiante->avatar = $path;
             } catch (\Exception $e) {
                 \Log::error('Error subiendo avatar: ' . $e->getMessage());
             }
         }
+
 
 
         // ===========================
@@ -197,19 +196,18 @@ class UsuarioController extends Controller
                     Storage::disk('gcs')->delete($estudiante->ruta_cv);
                 }
 
-                $file = $request->file('cv');
-                $filename = 'cv_' . time() . '.' . $file->getClientOriginalExtension();
-
-                Storage::disk('gcs')->put(
-                    'cv/' . $filename,
-                    file_get_contents($file->getRealPath())
+                $path = Storage::disk('gcs')->putFile(
+                    'cv',
+                    $request->file('cv'),
+                    'public'
                 );
 
-                $estudiante->ruta_cv = 'cv/' . $filename;
+                $estudiante->ruta_cv = $path;
             } catch (\Exception $e) {
                 \Log::error('Error subiendo CV: ' . $e->getMessage());
             }
         }
+
 
 
         $estudiante->save();
