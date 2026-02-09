@@ -5,10 +5,12 @@ FROM php:8.2-apache
 
 # =====================================================
 # Paquetes del sistema + extensiones PHP necesarias
-# (MySQL + PostgreSQL + Laravel)
 # =====================================================
 RUN apt-get update && apt-get install -y \
-    git unzip zip \
+    git \
+    unzip \
+    zip \
+    curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -27,7 +29,6 @@ RUN apt-get update && apt-get install -y \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
-
 # =====================================================
 # Composer (desde imagen oficial)
 # =====================================================
@@ -41,15 +42,15 @@ WORKDIR /var/www/html
 # Copiar todo el proyecto
 COPY . /var/www/html
 
-# Instalar dependencias
+# =====================================================
+# Instalar dependencias Laravel
+# =====================================================
 RUN composer install \
     --no-dev \
     --prefer-dist \
     --no-progress \
     --no-interaction \
     --optimize-autoloader
-
-
 
 # =====================================================
 # Apache → DocumentRoot = /public
@@ -72,7 +73,6 @@ RUN printf '<Directory ${APACHE_DOCUMENT_ROOT}>\n\
     > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
 
-    
 # =====================================================
 # Permisos correctos para Laravel
 # =====================================================
@@ -80,7 +80,14 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # =====================================================
-# Apache escucha en 8080 (requerido por Render)
+# Configuración PHP para uploads
+# =====================================================
+RUN echo "upload_max_filesize=10M" > /usr/local/etc/php/conf.d/uploads.ini \
+ && echo "post_max_size=10M" >> /usr/local/etc/php/conf.d/uploads.ini \
+ && echo "max_execution_time=300" >> /usr/local/etc/php/conf.d/uploads.ini
+
+# =====================================================
+# Apache escucha en 8080 (requerido por Cloud Run)
 # =====================================================
 RUN sed -i 's/80/8080/g' \
     /etc/apache2/ports.conf \
@@ -92,7 +99,3 @@ EXPOSE 8080
 # Arranque del servidor
 # =====================================================
 CMD ["apache2-foreground"]
-
-RUN echo "upload_max_filesize=10M" >> /usr/local/etc/php/conf.d/uploads.ini \
- && echo "post_max_size=10M" >> /usr/local/etc/php/conf.d/uploads.ini \
- && echo "max_execution_time=300" >> /usr/local/etc/php/conf.d/uploads.ini
