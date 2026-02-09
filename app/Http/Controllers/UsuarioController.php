@@ -183,9 +183,10 @@ class UsuarioController extends Controller
 
                 $estudiante->avatar = 'avatars/' . $filename;
             } catch (\Exception $e) {
-                // Evita error 500 si falla GCS
+                \Log::error('Error subiendo avatar: ' . $e->getMessage());
             }
         }
+
 
         // ===========================
         // CV EN GCS
@@ -206,12 +207,9 @@ class UsuarioController extends Controller
 
                 $estudiante->ruta_cv = 'cv/' . $filename;
             } catch (\Exception $e) {
-                // Evita error 500 si falla GCS
+                \Log::error('Error subiendo CV: ' . $e->getMessage());
             }
         }
-
-
-
 
 
         $estudiante->save();
