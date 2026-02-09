@@ -28,7 +28,7 @@ steps:
       - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
 
   # ===============================
-  # Deploy to Cloud Run (Service)
+  # Deploy to Cloud Run
   # ===============================
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
@@ -44,16 +44,20 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
 
-      # Cloud SQL socket mount
+      # ===============================
+      # Cloud SQL
+      # ===============================
       - '--set-cloudsql-instances'
       - '${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE}'
 
-      # Non-secret env vars (Laravel safe defaults for Cloud Run)
+      # ===============================
+      # ENV VARIABLES (Laravel + GCS)
+      # ===============================
       - '--set-env-vars'
       - >-
         APP_NAME=Laravel,
         APP_ENV=production,
-        APP_DEBUG=true,
+        APP_DEBUG=false,
         APP_URL=${_APP_URL},
         DB_CONNECTION=pgsql,
         DB_HOST=/cloudsql/${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE},
@@ -62,15 +66,15 @@ steps:
         SESSION_DRIVER=file,
         QUEUE_CONNECTION=sync,
         LOG_CHANNEL=stack,
-        LOG_LEVEL=debug,
+        LOG_LEVEL=info,
+        FILESYSTEM_DISK=gcs,
         GOOGLE_CLOUD_PROJECT_ID=${_AR_PROJECT_ID},
         GOOGLE_CLOUD_STORAGE_BUCKET=magallanes-portal-files-prod,
-        GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod,
-        FILESYSTEM_DISK=gcs
+        GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod
 
-
-
-      # Secret env vars (pulled from Secret Manager every deploy)
+      # ===============================
+      # SECRETS
+      # ===============================
       - '--set-secrets'
       - 'APP_KEY=APP_KEY:latest'
       - '--set-secrets'
@@ -81,7 +85,7 @@ steps:
       - 'DB_PASSWORD=DB_PASSWORD:latest'
 
 # ===============================
-# Images built by this pipeline
+# Images built
 # ===============================
 images:
   - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'

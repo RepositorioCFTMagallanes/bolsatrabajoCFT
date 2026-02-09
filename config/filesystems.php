@@ -7,9 +7,8 @@ return [
     | Default Filesystem Disk
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the default filesystem disk that should be used
-    | by the framework. The "local" disk, as well as a variety of cloud
-    | based disks are available to your application for file storage.
+    | Disk por defecto del sistema.
+    | En producción debe ser "gcs".
     |
     */
 
@@ -20,44 +19,71 @@ return [
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
-    | Below you may configure as many filesystem disks as necessary, and you
-    | may even configure multiple disks for the same driver. Examples for
-    | most supported storage drivers are configured here for reference.
-    |
-    | Supported drivers: "local", "ftp", "sftp", "s3"
+    | Configuración de discos de almacenamiento.
     |
     */
 
     'disks' => [
 
+        /*
+        |--------------------------------------------------------------------------
+        | Local (privado)
+        |--------------------------------------------------------------------------
+        */
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
-            'throw' => false,
-            'report' => false,
+            'throw' => true,
         ],
 
+        /*
+        |--------------------------------------------------------------------------
+        | Public (solo desarrollo)
+        |--------------------------------------------------------------------------
+        */
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
-            'throw' => false,
-            'report' => false,
+            'throw' => true,
         ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Google Cloud Storage (PRODUCCIÓN)
+        |--------------------------------------------------------------------------
+        */
         'gcs' => [
             'driver' => 'gcs',
+
+            // ID del proyecto
             'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
+
+            // Nombre del bucket
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
+
+            // Prefijo opcional (puede quedar null)
             'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', null),
+
+            // Visibilidad pública
             'visibility' => 'public',
-            'url' => env('GOOGLE_CLOUD_STORAGE_URL'), // ← ESTA LÍNEA FALTA
+
+            // URL base del bucket (CRÍTICO para mostrar imágenes)
+            'url' => env('GOOGLE_CLOUD_STORAGE_URL'),
+
+            // En Cloud Run se usa la service account automáticamente
             'key_file' => null,
-            'throw' => false,
+
+            // MUY IMPORTANTE: lanzar errores reales
+            'throw' => true,
         ],
 
-
+        /*
+        |--------------------------------------------------------------------------
+        | S3 (no usado actualmente)
+        |--------------------------------------------------------------------------
+        */
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -67,8 +93,7 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-            'report' => false,
+            'throw' => true,
         ],
 
     ],
@@ -77,11 +102,6 @@ return [
     |--------------------------------------------------------------------------
     | Symbolic Links
     |--------------------------------------------------------------------------
-    |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
-    |
     */
 
     'links' => [
