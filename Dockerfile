@@ -40,7 +40,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copiar todo el proyecto
-COPY . /var/www/html
+COPY . .
 
 # =====================================================
 # Instalar dependencias Laravel
@@ -53,17 +53,14 @@ RUN composer install \
     --optimize-autoloader
 
 # =====================================================
-# Limpiar cualquier cache de configuración
-# (CRÍTICO para Cloud Run y variables de entorno)
+# Eliminar cualquier cache previa de configuración
+# (CRÍTICO para Cloud Run)
 # =====================================================
 RUN rm -f bootstrap/cache/config.php \
-    bootstrap/cache/routes*.php \
+    bootstrap/cache/routes-v7.php \
     bootstrap/cache/packages.php \
     bootstrap/cache/services.php \
-    && php artisan config:clear \
-    && php artisan cache:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
+    || true
 
 # =====================================================
 # Apache → DocumentRoot = /public
