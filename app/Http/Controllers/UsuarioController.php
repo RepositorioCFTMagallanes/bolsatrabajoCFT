@@ -158,8 +158,7 @@ class UsuarioController extends Controller
 
                 $newPath = $disk->putFile(
                     'avatars',
-                    $request->file('avatar'),
-                    ['visibility' => 'public']
+                    $request->file('avatar')
                 );
 
                 if (!$newPath || !$disk->exists($newPath)) {
@@ -184,8 +183,7 @@ class UsuarioController extends Controller
 
                 $newPath = $disk->putFile(
                     'cv',
-                    $request->file('cv'),
-                    ['visibility' => 'public']
+                    $request->file('cv')
                 );
 
                 if (!$newPath || !$disk->exists($newPath)) {
