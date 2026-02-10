@@ -53,6 +53,19 @@ RUN composer install \
     --optimize-autoloader
 
 # =====================================================
+# Limpiar cualquier cache de configuración
+# (CRÍTICO para Cloud Run y variables de entorno)
+# =====================================================
+RUN rm -f bootstrap/cache/config.php \
+    bootstrap/cache/routes*.php \
+    bootstrap/cache/packages.php \
+    bootstrap/cache/services.php \
+    && php artisan config:clear \
+    && php artisan cache:clear \
+    && php artisan route:clear \
+    && php artisan view:clear
+
+# =====================================================
 # Apache → DocumentRoot = /public
 # =====================================================
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
