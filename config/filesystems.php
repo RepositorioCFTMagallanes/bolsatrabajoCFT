@@ -63,19 +63,16 @@ return [
             // Nombre del bucket
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
 
-            // Prefijo opcional (puede quedar null)
+            // Prefijo opcional
             'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', null),
 
-            // Visibilidad pública
-            'visibility' => 'public',
-
-            // URL base del bucket (CRÍTICO para mostrar imágenes)
+            // URL base del bucket
             'url' => env('GOOGLE_CLOUD_STORAGE_URL'),
 
             // En Cloud Run se usa la service account automáticamente
             'key_file' => null,
 
-            // MUY IMPORTANTE: lanzar errores reales
+            // Lanzar errores reales
             'throw' => true,
         ],
 
