@@ -13,26 +13,18 @@ use Illuminate\Filesystem\FilesystemAdapter;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         if (app()->environment('production')) {
             URL::forceScheme('https');
         }
 
-        // =========================================
-        // REGISTRO DEL DRIVER GCS (SOLUCIÓN REAL)
-        // =========================================
+        // Driver GCS sin ACL
         Storage::extend('gcs', function ($app, $config) {
 
             $storageClient = new StorageClient([
@@ -41,9 +33,12 @@ class AppServiceProvider extends ServiceProvider
 
             $bucket = $storageClient->bucket($config['bucket']);
 
+            // Adapter simple (sin ACL)
             $adapter = new GoogleCloudStorageAdapter($bucket);
 
             $filesystem = new Filesystem($adapter);
+
+            $config['visibility'] = 'private';
 
             return new FilesystemAdapter($filesystem, $adapter, $config);
         });
