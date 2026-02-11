@@ -150,18 +150,21 @@ class UsuarioController extends Controller
             ]);
 
             // =========================
-            // AVATAR EN GCS
+            // AVATAR EN GCS (SIN ACL)
             // =========================
             if ($request->hasFile('avatar')) {
 
                 $disk = Storage::disk('gcs');
 
-                $newPath = $disk->putFile(
-                    'avatars',
-                    $request->file('avatar')
+                $file = $request->file('avatar');
+                $filename = 'avatars/' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+                $disk->put(
+                    $filename,
+                    file_get_contents($file->getRealPath())
                 );
 
-                if (!$newPath || !$disk->exists($newPath)) {
+                if (!$disk->exists($filename)) {
                     throw new \Exception('El avatar no se subió correctamente a GCS');
                 }
 
@@ -169,24 +172,27 @@ class UsuarioController extends Controller
                     $disk->delete($estudiante->avatar);
                 }
 
-                $estudiante->avatar = $newPath;
+                $estudiante->avatar = $filename;
 
-                Log::info('Avatar subido correctamente', ['path' => $newPath]);
+                Log::info('Avatar subido correctamente', ['path' => $filename]);
             }
 
             // =========================
-            // CV EN GCS
+            // CV EN GCS (SIN ACL)
             // =========================
             if ($request->hasFile('cv')) {
 
                 $disk = Storage::disk('gcs');
 
-                $newPath = $disk->putFile(
-                    'cv',
-                    $request->file('cv')
+                $file = $request->file('cv');
+                $filename = 'cv/' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+                $disk->put(
+                    $filename,
+                    file_get_contents($file->getRealPath())
                 );
 
-                if (!$newPath || !$disk->exists($newPath)) {
+                if (!$disk->exists($filename)) {
                     throw new \Exception('El CV no se subió correctamente a GCS');
                 }
 
@@ -194,10 +200,11 @@ class UsuarioController extends Controller
                     $disk->delete($estudiante->ruta_cv);
                 }
 
-                $estudiante->ruta_cv = $newPath;
+                $estudiante->ruta_cv = $filename;
 
-                Log::info('CV subido correctamente', ['path' => $newPath]);
+                Log::info('CV subido correctamente', ['path' => $filename]);
             }
+
 
             $estudiante->save();
 
@@ -205,7 +212,6 @@ class UsuarioController extends Controller
 
             return redirect('/usuarios/perfil')
                 ->with('success', 'Perfil actualizado correctamente.');
-
         } catch (\Throwable $e) {
 
             DB::rollBack();
