@@ -157,12 +157,15 @@ class UsuarioController extends Controller
                 $disk = Storage::disk('gcs');
 
                 $file = $request->file('avatar');
-                $filename = 'avatars/' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $filename = 'avatars/' . uniqid('', true) . '.' . $file->getClientOriginalExtension();
 
-                $disk->put(
-                    $filename,
-                    file_get_contents($file->getRealPath())
-                );
+                $stream = fopen($file->getRealPath(), 'r');
+
+                $disk->put($filename, $stream);
+
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
 
                 if (!$disk->exists($filename)) {
                     throw new \Exception('El avatar no se subió correctamente a GCS');
@@ -185,12 +188,15 @@ class UsuarioController extends Controller
                 $disk = Storage::disk('gcs');
 
                 $file = $request->file('cv');
-                $filename = 'cv/' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $filename = 'cv/' . uniqid('', true) . '.' . $file->getClientOriginalExtension();
 
-                $disk->put(
-                    $filename,
-                    file_get_contents($file->getRealPath())
-                );
+                $stream = fopen($file->getRealPath(), 'r');
+
+                $disk->put($filename, $stream);
+
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
 
                 if (!$disk->exists($filename)) {
                     throw new \Exception('El CV no se subió correctamente a GCS');

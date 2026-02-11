@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Driver GCS sin ACL
+        // Driver GCS sin ACL legacy (compatible con UBLA)
         Storage::extend('gcs', function ($app, $config) {
 
             $storageClient = new StorageClient([
@@ -33,12 +33,13 @@ class AppServiceProvider extends ServiceProvider
 
             $bucket = $storageClient->bucket($config['bucket']);
 
-            // Adapter simple (sin ACL)
-            $adapter = new GoogleCloudStorageAdapter($bucket);
+            // Adapter sin visibility ni ACL
+            $adapter = new GoogleCloudStorageAdapter(
+                $bucket,
+                $config['path_prefix'] ?? ''
+            );
 
             $filesystem = new Filesystem($adapter);
-
-            $config['visibility'] = 'private';
 
             return new FilesystemAdapter($filesystem, $adapter, $config);
         });
