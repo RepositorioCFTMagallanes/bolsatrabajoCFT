@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\OfertaRecommendationService;
+use Illuminate\Support\Str;
 
 class UsuarioController extends Controller
 {
@@ -63,7 +64,6 @@ class UsuarioController extends Controller
         $estudiante = Estudiante::with('usuario')
             ->where('usuario_id', $usuarioId)
             ->firstOrFail();
-
 
         return view('users.editar', [
             'estudiante' => $estudiante,
@@ -148,59 +148,78 @@ class UsuarioController extends Controller
                 'modalidad_preferencia_id' => $request->modalidad,
             ]);
 
-            // =========================
-            // AVATAR
-            // =========================
-            if ($request->hasFile('avatar')) {
+            // ===========================
+            // AVATAR EN GCS
+            // ===========================
+            $avatarFile = $request->file('avatar');
 
-                if (!empty($estudiante->avatar)) {
-                    Storage::disk('gcs')->delete($estudiante->avatar);
+            if ($avatarFile) {
+                if (!$avatarFile->isValid()) {
+                    Log::warning('Avatar upload inválido', [
+                        'error' => $avatarFile->getError(),
+                        'error_message' => $avatarFile->getErrorMessage(),
+                        'size' => $avatarFile->getSize(),
+                    ]);
+                } else {
+                    if (!empty($estudiante->avatar) && !Str::startsWith($estudiante->avatar, ['http://', 'https://'])) {
+                        Storage::disk('gcs')->delete($estudiante->avatar);
+                    }
+
+                    $path = Storage::disk('gcs')->putFile('avatars', $avatarFile);
+
+                    Log::info('Avatar subido a GCS', [
+                        'path' => $path,
+                    ]);
+
+                    $estudiante->avatar = $path;
                 }
-
-                $path = Storage::disk('gcs')->putFile(
-                    'avatars',
-                    $request->file('avatar')
-                );
-
-                $estudiante->avatar = $path;
-
-                Log::info('Avatar subido', ['path' => $path]);
             }
 
-            // =========================
-            // CV
-            // =========================
-            if ($request->hasFile('cv')) {
+            // ===========================
+            // CV EN GCS
+            // ===========================
+            $cvFile = $request->file('cv');
 
-                if (!empty($estudiante->ruta_cv)) {
-                    Storage::disk('gcs')->delete($estudiante->ruta_cv);
+            if ($cvFile) {
+                if (!$cvFile->isValid()) {
+                    Log::warning('CV upload inválido', [
+                        'error' => $cvFile->getError(),
+                        'error_message' => $cvFile->getErrorMessage(),
+                        'size' => $cvFile->getSize(),
+                    ]);
+                } else {
+                    if (!empty($estudiante->ruta_cv) && !Str::startsWith($estudiante->ruta_cv, ['http://', 'https://'])) {
+                        Storage::disk('gcs')->delete($estudiante->ruta_cv);
+                    }
+
+                    $path = Storage::disk('gcs')->putFile('cv', $cvFile);
+
+                    Log::info('CV subido a GCS', [
+                        'path' => $path,
+                    ]);
+
+                    $estudiante->ruta_cv = $path;
                 }
-
-                $path = Storage::disk('gcs')->putFile(
-                    'cv',
-                    $request->file('cv')
-                );
-
-                $estudiante->ruta_cv = $path;
-
-                Log::info('CV subido', ['path' => $path]);
             }
 
+            // GUARDAR CAMBIOS
             $estudiante->save();
 
             DB::commit();
 
             return redirect('/usuarios/perfil')
                 ->with('success', 'Perfil actualizado correctamente.');
+
         } catch (\Throwable $e) {
 
             DB::rollBack();
 
-            Log::error('Error actualizando perfil', [
+            Log::error('Error al actualizar perfil estudiante', [
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->with('error', 'Error al guardar el perfil.');
+            return redirect('/usuarios/editar')
+                ->with('error', 'Ocurrió un error al actualizar el perfil.');
         }
     }
 
