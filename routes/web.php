@@ -313,3 +313,10 @@ Route::get('/recursos-empleabilidad/{id}', [RecursoPublicoController::class, 'sh
 
 Route::view('/terminos-y-condiciones', 'terminos.condiciones')->name('terminos.condiciones');
 Route::view('/terminos-difusion-marca', 'terminos.marca')->name('terminos.marca');
+
+use Illuminate\Support\Facades\Storage;
+
+Route::get('/test-gcs', function () {
+    Storage::disk('gcs')->put('test.txt', 'Hola desde Cloud Run');
+    return 'Archivo subido a GCS';
+});

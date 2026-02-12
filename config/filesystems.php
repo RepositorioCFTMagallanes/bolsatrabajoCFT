@@ -14,6 +14,7 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'gcs'),
 
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -56,25 +57,13 @@ return [
         */
         'gcs' => [
             'driver' => 'gcs',
-
-            // ID del proyecto
             'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
-
-            // Nombre del bucket
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
-
-            // Prefijo opcional
-            'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', null),
-
-            // URL base del bucket
-            'url' => env('GOOGLE_CLOUD_STORAGE_URL'),
-
-            // En Cloud Run se usa la service account automáticamente
-            'key_file' => null,
-
-            // Lanzar errores reales
+            'path_prefix' => null,
+            'visibility' => 'private',
             'throw' => true,
         ],
+
 
         /*
         |--------------------------------------------------------------------------
