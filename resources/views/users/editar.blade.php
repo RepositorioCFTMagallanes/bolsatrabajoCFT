@@ -1,26 +1,8 @@
-@extends('layouts.app')
-
-@section('content')
 @php
-use Illuminate\Support\Facades\Storage;
-
 $avatarUrl = asset('img/testimonios/test (2).png');
 $cvUrl = null;
-
-try {
-    if (isset($estudiante) && $estudiante && !empty($estudiante->avatar)) {
-        $avatarUrl = Storage::disk('gcs')->url($estudiante->avatar);
-    }
-
-    if (isset($estudiante) && $estudiante && !empty($estudiante->ruta_cv)) {
-        $cvUrl = Storage::disk('gcs')->url($estudiante->ruta_cv);
-    }
-} catch (\Throwable $e) {
-    // fallback silencioso si falla GCS
-    $avatarUrl = asset('img/testimonios/test (2).png');
-    $cvUrl = null;
-}
 @endphp
+
 
 <main class="container user-edit">
 

@@ -120,18 +120,14 @@ class UsuarioController extends Controller
 
         try {
 
-            // =========================
             // ACTUALIZAR USUARIO
-            // =========================
             $usuario->update([
                 'nombre'   => $request->nombre,
                 'apellido' => $request->apellido,
                 'email'    => $request->email,
             ]);
 
-            // =========================
             // ACTUALIZAR ESTUDIANTE
-            // =========================
             $estudiante->fill([
                 'run'                      => $request->run,
                 'estado_carrera'           => $request->estado,
@@ -150,16 +146,14 @@ class UsuarioController extends Controller
             ]);
 
             // =========================
-            // AVATAR EN GCS
+            // AVATAR
             // =========================
             if ($request->hasFile('avatar')) {
 
-                // Borra el anterior
                 if (!empty($estudiante->avatar)) {
                     Storage::disk('gcs')->delete($estudiante->avatar);
                 }
 
-                // Subir nuevo avatar
                 $path = Storage::disk('gcs')->putFile(
                     'avatars',
                     $request->file('avatar')
@@ -170,18 +164,15 @@ class UsuarioController extends Controller
                 Log::info('Avatar subido', ['path' => $path]);
             }
 
-
             // =========================
-            // CV EN GCS
+            // CV
             // =========================
             if ($request->hasFile('cv')) {
 
-                // Borra el anterior
                 if (!empty($estudiante->ruta_cv)) {
                     Storage::disk('gcs')->delete($estudiante->ruta_cv);
                 }
 
-                // Subir nuevo CV
                 $path = Storage::disk('gcs')->putFile(
                     'cv',
                     $request->file('cv')
@@ -192,13 +183,13 @@ class UsuarioController extends Controller
                 Log::info('CV subido', ['path' => $path]);
             }
 
-
             $estudiante->save();
 
             DB::commit();
 
             return redirect('/usuarios/perfil')
                 ->with('success', 'Perfil actualizado correctamente.');
+
         } catch (\Throwable $e) {
 
             DB::rollBack();
