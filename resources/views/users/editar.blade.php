@@ -41,8 +41,9 @@ $cvUrl = null;
                     <label for="avatar">Foto de perfil</label>
                     <div class="avatar-row">
                         <img class="avatar-preview"
-                             src="{{ $avatarUrl }}"
-                             alt="Avatar actual">
+                            src="{{ asset('img/testimonios/test (2).png') }}"
+                            alt="Avatar actual">
+
                         <div class="avatar-actions">
                             <input type="file" id="avatar" name="avatar" accept="image/*">
                             <p class="hint">Formatos: JPG o PNG, máx. 2MB.</p>
@@ -54,17 +55,17 @@ $cvUrl = null;
                         <div class="field">
                             <label for="nombre">Nombre</label>
                             <input id="nombre" name="nombre" type="text"
-                                   value="{{ $estudiante->usuario->nombre ?? '' }}">
+                                value="{{ $estudiante->usuario->nombre ?? '' }}">
                             <div class="field">
                                 <label for="apellido">Apellido</label>
                                 <input id="apellido" name="apellido" type="text"
-                                       value="{{ $estudiante->usuario->apellido ?? '' }}">
+                                    value="{{ $estudiante->usuario->apellido ?? '' }}">
                             </div>
                         </div>
                         <div class="field">
                             <label for="run">RUN (opcional)</label>
                             <input id="run" name="run" type="text"
-                                   value="{{ $estudiante->run ?? '' }}">
+                                value="{{ $estudiante->run ?? '' }}">
                         </div>
                     </div>
                     <div class="grid-2">
@@ -88,7 +89,7 @@ $cvUrl = null;
                         <div class="field">
                             <label for="titulo">Carrera / Título</label>
                             <input id="titulo" name="titulo" type="text"
-                                   value="{{ $estudiante->carrera ?? '' }}">
+                                value="{{ $estudiante->carrera ?? '' }}">
                         </div>
                     </div>
                 </div>
@@ -102,17 +103,17 @@ $cvUrl = null;
                 <div class="field">
                     <label for="email">Correo</label>
                     <input id="email" name="email" type="email"
-                           value="{{ $estudiante->usuario->email ?? '' }}">
+                        value="{{ $estudiante->usuario->email ?? '' }}">
                 </div>
                 <div class="field">
                     <label for="telefono">Teléfono</label>
                     <input id="telefono" name="telefono" type="text"
-                           value="{{ $estudiante->telefono ?? '' }}">
+                        value="{{ $estudiante->telefono ?? '' }}">
                 </div>
                 <div class="field">
                     <label for="ciudad">Ciudad</label>
                     <input id="ciudad" name="ciudad" type="text"
-                           value="{{ $estudiante->ciudad ?? '' }}">
+                        value="{{ $estudiante->ciudad ?? '' }}">
                 </div>
             </div>
 
@@ -138,13 +139,13 @@ $cvUrl = null;
                 <div class="field">
                     <label for="institucion">Institución</label>
                     <input id="institucion" name="institucion" type="text"
-                           value="{{ $estudiante->institucion ?? '' }}">
+                        value="{{ $estudiante->institucion ?? '' }}">
                 </div>
                 <div class="field">
                     <label for="anio_egreso">Año de egreso</label>
                     <input id="anio_egreso" name="anio_egreso" type="number"
-                           min="1990" max="2099"
-                           value="{{ $estudiante->anio_egreso ?? '' }}">
+                        min="1990" max="2099"
+                        value="{{ $estudiante->anio_egreso ?? '' }}">
                 </div>
             </div>
 
@@ -171,10 +172,10 @@ $cvUrl = null;
                     <label for="cv">Subir CV (PDF)</label>
                     <input id="cv" name="cv" type="file" accept="application/pdf">
                     @if ($cvUrl)
-                        <p class="hint">
-                            CV actual:
-                            <a href="{{ $cvUrl }}" target="_blank">Ver PDF</a>
-                        </p>
+                    <p class="hint">
+                        CV actual:
+                        <a href="{{ $cvUrl }}" target="_blank">Ver PDF</a>
+                    </p>
                     @endif
                     <span class="hint">Máx. 4MB. Formato PDF.</span>
                 </div>
@@ -182,14 +183,14 @@ $cvUrl = null;
                 <div class="field">
                     <label for="linkedin">LinkedIn (opcional)</label>
                     <input id="linkedin" name="linkedin" type="url"
-                           value="{{ $estudiante->linkedin_url ?? '' }}">
+                        value="{{ $estudiante->linkedin_url ?? '' }}">
                 </div>
             </div>
 
             <div class="field">
                 <label for="portfolio">Portafolio / Sitio (opcional)</label>
                 <input id="portfolio" name="portfolio" type="url"
-                       value="{{ $estudiante->portfolio_url ?? '' }}">
+                    value="{{ $estudiante->portfolio_url ?? '' }}">
             </div>
         </section>
 
