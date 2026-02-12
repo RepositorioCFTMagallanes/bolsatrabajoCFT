@@ -98,7 +98,7 @@
             </ul>
 
             <div class="activity-cta">
-                <a href="{{ route('postulaciones.index') }}" class="btn btn-primary">
+                <a href="{{ url('/usuarios/mis-postulaciones') }}" class="btn btn-primary">
                     Mis Postulaciones
                 </a>
             </div>

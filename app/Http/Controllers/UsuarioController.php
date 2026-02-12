@@ -23,7 +23,9 @@ class UsuarioController extends Controller
             return redirect('/login')->with('error', 'Sesión expirada. Inicia sesión nuevamente.');
         }
 
-        $estudiante = Estudiante::where('usuario_id', $usuarioId)->first();
+        $estudiante = Estudiante::with('usuario')
+            ->where('usuario_id', $usuarioId)
+            ->first();
 
         if (!$estudiante) {
             return redirect('/usuarios/editar')
@@ -189,7 +191,6 @@ class UsuarioController extends Controller
 
             return redirect('/usuarios/perfil')
                 ->with('success', 'Perfil actualizado correctamente.');
-
         } catch (\Throwable $e) {
 
             DB::rollBack();
