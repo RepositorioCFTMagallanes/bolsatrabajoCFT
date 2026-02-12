@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\ServiceProvider;
+
 return [
 
     /*
@@ -7,7 +10,6 @@ return [
     | Application Name
     |--------------------------------------------------------------------------
     */
-
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
@@ -15,7 +17,6 @@ return [
     | Application Environment
     |--------------------------------------------------------------------------
     */
-
     'env' => env('APP_ENV', 'production'),
 
     /*
@@ -23,7 +24,6 @@ return [
     | Application Debug Mode
     |--------------------------------------------------------------------------
     */
-
     'debug' => (bool) env('APP_DEBUG', false),
 
     /*
@@ -31,7 +31,6 @@ return [
     | Application URL
     |--------------------------------------------------------------------------
     */
-
     'url' => env('APP_URL', 'http://localhost'),
 
     /*
@@ -39,7 +38,6 @@ return [
     | Application Timezone
     |--------------------------------------------------------------------------
     */
-
     'timezone' => 'UTC',
 
     /*
@@ -47,7 +45,6 @@ return [
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     */
-
     'locale' => env('APP_LOCALE', 'en'),
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
@@ -57,7 +54,6 @@ return [
     | Encryption Key
     |--------------------------------------------------------------------------
     */
-
     'cipher' => 'AES-256-CBC',
     'key' => env('APP_KEY'),
 
@@ -72,7 +68,6 @@ return [
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     */
-
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
@@ -80,43 +75,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Autoloaded Service Providers
+    | Service Providers
     |--------------------------------------------------------------------------
+    |
+    | En Laravel 11+ los providers del framework se cargan automáticamente.
+    | Aquí solo se registran los providers de la aplicación.
+    |
     */
 
-    'providers' => [
-
-        /*
-         * Laravel Framework Service Providers...
-         */
-        Illuminate\Auth\AuthServiceProvider::class,
-        Illuminate\Broadcasting\BroadcastServiceProvider::class,
-        Illuminate\Bus\BusServiceProvider::class,
-        Illuminate\Cache\CacheServiceProvider::class,
-        Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
-        Illuminate\Cookie\CookieServiceProvider::class,
-        Illuminate\Database\DatabaseServiceProvider::class,
-        Illuminate\Encryption\EncryptionServiceProvider::class,
-        Illuminate\Filesystem\FilesystemServiceProvider::class,
-        Illuminate\Foundation\Providers\FoundationServiceProvider::class,
-        Illuminate\Hashing\HashServiceProvider::class,
-        Illuminate\Mail\MailServiceProvider::class,
-        Illuminate\Notifications\NotificationServiceProvider::class,
-        Illuminate\Pagination\PaginationServiceProvider::class,
-        Illuminate\Pipeline\PipelineServiceProvider::class,
-        Illuminate\Queue\QueueServiceProvider::class,
-        Illuminate\Redis\RedisServiceProvider::class,
-        Illuminate\Auth\Passwords\PasswordResetServiceProvider::class,
-        Illuminate\Session\SessionServiceProvider::class,
-        Illuminate\Translation\TranslationServiceProvider::class,
-        Illuminate\Validation\ValidationServiceProvider::class,
-        Illuminate\View\ViewServiceProvider::class,
-
-        /*
-         * Application Service Providers...
-         */
+    'providers' => ServiceProvider::defaultProviders()->merge([
         App\Providers\AppServiceProvider::class,
-    ],
+    ])->toArray(),
 
     /*
     |--------------------------------------------------------------------------
@@ -124,19 +93,8 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'aliases' => [
-
-        'App' => Illuminate\Support\Facades\App::class,
-        'Arr' => Illuminate\Support\Arr::class,
-        'Artisan' => Illuminate\Support\Facades\Artisan::class,
-        'Auth' => Illuminate\Support\Facades\Auth::class,
-        'Blade' => Illuminate\Support\Facades\Blade::class,
-        'Cache' => Illuminate\Support\Facades\Cache::class,
-        'Config' => Illuminate\Support\Facades\Config::class,
-        'DB' => Illuminate\Support\Facades\DB::class,
-        'Log' => Illuminate\Support\Facades\Log::class,
-        'Route' => Illuminate\Support\Facades\Route::class,
+    'aliases' => Facade::defaultAliases()->merge([
         'Storage' => Illuminate\Support\Facades\Storage::class,
-    ],
+    ])->toArray(),
 
 ];
