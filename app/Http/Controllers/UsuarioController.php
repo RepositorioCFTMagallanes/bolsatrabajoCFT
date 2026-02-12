@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\OfertaRecommendationService;
+use Google\Cloud\Storage\StorageClient;
+use Illuminate\Support\Str;
 
 class UsuarioController extends Controller
 {
@@ -150,66 +152,100 @@ class UsuarioController extends Controller
             ]);
 
             // =========================
-            // AVATAR EN GCS (SIN ACL)
+            // AVATAR EN GCS (SDK DIRECTO, SIN ACL)
             // =========================
             if ($request->hasFile('avatar')) {
 
-                $disk = Storage::disk('gcs');
-
                 $file = $request->file('avatar');
-                $filename = 'avatars/' . uniqid('', true) . '.' . $file->getClientOriginalExtension();
+
+                $bucketName = env('GOOGLE_CLOUD_STORAGE_BUCKET');
+                if (!$bucketName) {
+                    throw new \Exception('Falta GOOGLE_CLOUD_STORAGE_BUCKET en entorno');
+                }
+
+                $storage = new StorageClient([
+                    'projectId' => env('GOOGLE_CLOUD_PROJECT_ID'),
+                    // En Cloud Run usa la service account automáticamente (ADC),
+                    // no seteamos keyFile.
+                ]);
+
+                $bucket = $storage->bucket($bucketName);
+
+                $filename = 'avatars/' . Str::uuid()->toString() . '.' . $file->getClientOriginalExtension();
 
                 $stream = fopen($file->getRealPath(), 'r');
 
-                $disk->put($filename, $stream);
+                $bucket->upload($stream, [
+                    'name' => $filename,
+                    // CLAVE: NO PASAR predefinedAcl / acl
+                ]);
 
                 if (is_resource($stream)) {
                     fclose($stream);
                 }
 
-                if (!$disk->exists($filename)) {
-                    throw new \Exception('El avatar no se subió correctamente a GCS');
-                }
-
+                // Borra el anterior
                 if (!empty($estudiante->avatar) && $estudiante->avatar !== '0') {
-                    $disk->delete($estudiante->avatar);
+                    try {
+                        $bucket->object($estudiante->avatar)->delete();
+                    } catch (\Throwable $e) {
+                        Log::warning('No se pudo borrar avatar anterior', [
+                            'path' => $estudiante->avatar,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
 
                 $estudiante->avatar = $filename;
-
-                Log::info('Avatar subido correctamente', ['path' => $filename]);
+                Log::info('Avatar subido (SDK directo)', ['path' => $filename]);
             }
 
             // =========================
-            // CV EN GCS (SIN ACL)
+            // CV EN GCS (SDK DIRECTO, SIN ACL)
             // =========================
             if ($request->hasFile('cv')) {
 
-                $disk = Storage::disk('gcs');
-
                 $file = $request->file('cv');
-                $filename = 'cv/' . uniqid('', true) . '.' . $file->getClientOriginalExtension();
+
+                $bucketName = env('GOOGLE_CLOUD_STORAGE_BUCKET');
+                if (!$bucketName) {
+                    throw new \Exception('Falta GOOGLE_CLOUD_STORAGE_BUCKET en entorno');
+                }
+
+                $storage = new StorageClient([
+                    'projectId' => env('GOOGLE_CLOUD_PROJECT_ID'),
+                ]);
+
+                $bucket = $storage->bucket($bucketName);
+
+                $filename = 'cv/' . Str::uuid()->toString() . '.' . $file->getClientOriginalExtension();
 
                 $stream = fopen($file->getRealPath(), 'r');
 
-                $disk->put($filename, $stream);
+                $bucket->upload($stream, [
+                    'name' => $filename,
+                ]);
 
                 if (is_resource($stream)) {
                     fclose($stream);
                 }
 
-                if (!$disk->exists($filename)) {
-                    throw new \Exception('El CV no se subió correctamente a GCS');
-                }
-
+                // Borra el anterior
                 if (!empty($estudiante->ruta_cv)) {
-                    $disk->delete($estudiante->ruta_cv);
+                    try {
+                        $bucket->object($estudiante->ruta_cv)->delete();
+                    } catch (\Throwable $e) {
+                        Log::warning('No se pudo borrar CV anterior', [
+                            'path' => $estudiante->ruta_cv,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
 
                 $estudiante->ruta_cv = $filename;
-
-                Log::info('CV subido correctamente', ['path' => $filename]);
+                Log::info('CV subido (SDK directo)', ['path' => $filename]);
             }
+
 
 
             $estudiante->save();
