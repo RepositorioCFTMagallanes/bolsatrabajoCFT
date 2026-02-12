@@ -149,58 +149,23 @@ class UsuarioController extends Controller
             ]);
 
             // ===========================
-            // AVATAR EN GCS
+            // AVATAR EN BASE DE DATOS
             // ===========================
-            $avatarFile = $request->file('avatar');
-
-            if ($avatarFile) {
-                if (!$avatarFile->isValid()) {
-                    Log::warning('Avatar upload inválido', [
-                        'error' => $avatarFile->getError(),
-                        'error_message' => $avatarFile->getErrorMessage(),
-                        'size' => $avatarFile->getSize(),
-                    ]);
-                } else {
-                    if (!empty($estudiante->avatar) && !Str::startsWith($estudiante->avatar, ['http://', 'https://'])) {
-                        Storage::disk('gcs')->delete($estudiante->avatar);
-                    }
-
-                    $path = Storage::disk('gcs')->putFile('avatars', $avatarFile);
-
-                    Log::info('Avatar subido a GCS', [
-                        'path' => $path,
-                    ]);
-
-                    $estudiante->avatar = $path;
-                }
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+                $estudiante->avatar_blob = file_get_contents($file->getRealPath());
+                $estudiante->avatar_mime = $file->getMimeType();
             }
 
             // ===========================
-            // CV EN GCS
+            // CV EN BASE DE DATOS
             // ===========================
-            $cvFile = $request->file('cv');
-
-            if ($cvFile) {
-                if (!$cvFile->isValid()) {
-                    Log::warning('CV upload inválido', [
-                        'error' => $cvFile->getError(),
-                        'error_message' => $cvFile->getErrorMessage(),
-                        'size' => $cvFile->getSize(),
-                    ]);
-                } else {
-                    if (!empty($estudiante->ruta_cv) && !Str::startsWith($estudiante->ruta_cv, ['http://', 'https://'])) {
-                        Storage::disk('gcs')->delete($estudiante->ruta_cv);
-                    }
-
-                    $path = Storage::disk('gcs')->putFile('cv', $cvFile);
-
-                    Log::info('CV subido a GCS', [
-                        'path' => $path,
-                    ]);
-
-                    $estudiante->ruta_cv = $path;
-                }
+            if ($request->hasFile('cv')) {
+                $file = $request->file('cv');
+                $estudiante->cv_blob = file_get_contents($file->getRealPath());
+                $estudiante->cv_mime = $file->getMimeType();
             }
+
 
             // GUARDAR CAMBIOS
             $estudiante->save();
@@ -209,7 +174,6 @@ class UsuarioController extends Controller
 
             return redirect('/usuarios/perfil')
                 ->with('success', 'Perfil actualizado correctamente.');
-
         } catch (\Throwable $e) {
 
             DB::rollBack();

@@ -35,6 +35,12 @@ class Estudiante extends Model
         'frecuencia_alertas',
         'creado_en',
         'actualizado_en',
+
+        // NUEVOS CAMPOS BLOB
+        'avatar_blob',
+        'avatar_mime',
+        'cv_blob',
+        'cv_mime',
     ];
 
     public function usuario()
@@ -47,4 +53,3 @@ class Estudiante extends Model
         return $this->hasMany(Postulacion::class, 'estudiante_id');
     }
 }
-
