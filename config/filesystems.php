@@ -7,13 +7,12 @@ return [
     | Default Filesystem Disk
     |--------------------------------------------------------------------------
     |
-    | Disk por defecto del sistema.
-    | En producción debe ser "gcs".
+    | Disco por defecto del sistema.
+    | Debe ser "local" para evitar errores internos y CSS roto.
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'gcs'),
-
+    'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +33,6 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'throw' => true,
         ],
 
         /*
@@ -47,12 +45,11 @@ return [
             'root' => storage_path('app/public'),
             'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
-            'throw' => true,
         ],
 
         /*
         |--------------------------------------------------------------------------
-        | Google Cloud Storage (PRODUCCIÓN)
+        | Google Cloud Storage (producción)
         |--------------------------------------------------------------------------
         */
         'gcs' => [
@@ -60,10 +57,8 @@ return [
             'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
             'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
             'path_prefix' => null,
-            'visibility' => 'private',
-            'throw' => true,
+            'visibility' => 'public',
         ],
-
 
         /*
         |--------------------------------------------------------------------------
@@ -79,7 +74,6 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => true,
         ],
 
     ],
