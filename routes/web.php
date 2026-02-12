@@ -16,7 +16,7 @@ use App\Http\Controllers\OfertaPublicaController;
 use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\RecursoPublicoController;
 use App\Http\Controllers\Auth\PasswordResetController;
-
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -314,9 +314,18 @@ Route::get('/recursos-empleabilidad/{id}', [RecursoPublicoController::class, 'sh
 Route::view('/terminos-y-condiciones', 'terminos.condiciones')->name('terminos.condiciones');
 Route::view('/terminos-difusion-marca', 'terminos.marca')->name('terminos.marca');
 
-use Illuminate\Support\Facades\Storage;
+
 
 Route::get('/test-gcs', function () {
-    Storage::disk('gcs')->put('test.txt', 'Hola desde Cloud Run');
-    return 'Archivo subido a GCS';
+    $path = 'debug/test.txt';
+    $content = 'OK ' . now()->toDateTimeString();
+
+    Storage::disk('gcs')->put($path, $content);
+
+    return response()->json([
+        'ok' => true,
+        'bucket' => config('filesystems.disks.gcs.bucket'),
+        'path' => $path,
+    ], 200);
 });
+
