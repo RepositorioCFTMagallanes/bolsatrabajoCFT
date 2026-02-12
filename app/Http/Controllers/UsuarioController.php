@@ -148,23 +148,21 @@ class UsuarioController extends Controller
                 'modalidad_preferencia_id' => $request->modalidad,
             ]);
 
-            // ===========================
-            // AVATAR EN BASE DE DATOS
-            // ===========================
+            // AVATAR
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
                 $estudiante->avatar_blob = file_get_contents($file->getRealPath());
                 $estudiante->avatar_mime = $file->getMimeType();
             }
 
-            // ===========================
-            // CV EN BASE DE DATOS
-            // ===========================
+            // CV
             if ($request->hasFile('cv')) {
                 $file = $request->file('cv');
                 $estudiante->cv_blob = file_get_contents($file->getRealPath());
                 $estudiante->cv_mime = $file->getMimeType();
             }
+
+
 
 
             // GUARDAR CAMBIOS
