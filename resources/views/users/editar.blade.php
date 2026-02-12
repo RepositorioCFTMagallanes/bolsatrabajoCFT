@@ -1,7 +1,18 @@
+@extends('layouts.app')
+
+@section('content')
+
 @php
 $avatarUrl = asset('img/testimonios/test (2).png');
 $cvUrl = null;
 @endphp
+
+@if(!$estudiante)
+    <div class="alert-error">
+        No se encontró el perfil del estudiante.
+    </div>
+@endif
+
 
 
 <main class="container user-edit">

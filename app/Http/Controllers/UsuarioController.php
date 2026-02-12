@@ -62,7 +62,8 @@ class UsuarioController extends Controller
 
         $estudiante = Estudiante::with('usuario')
             ->where('usuario_id', $usuarioId)
-            ->first();
+            ->firstOrFail();
+
 
         return view('users.editar', [
             'estudiante' => $estudiante,
