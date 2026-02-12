@@ -42,6 +42,10 @@ class Estudiante extends Model
         'cv_blob',
         'cv_mime',
     ];
+    protected $casts = [
+        'avatar_mime' => 'string',
+        'cv_mime' => 'string',
+    ];
 
     public function usuario()
     {
