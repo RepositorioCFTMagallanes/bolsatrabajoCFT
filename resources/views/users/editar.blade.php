@@ -38,7 +38,8 @@ try {
         <p class="muted">Actualiza tu información para mejorar tus postulaciones.</p>
     </header>
 
-    <form action="{{ url('/usuarios/editar') }}" method="post" enctype="multipart/form-data">
+    <form action="{{ route('usuarios.update') }}" method="post" enctype="multipart/form-data">
+
         @csrf
         @if ($errors->any())
         <div class="alert-error">
