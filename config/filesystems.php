@@ -2,7 +2,8 @@
 
 return [
 
-    'default' => env('FILESYSTEM_DISK', 'gcs'),
+    'default' => env('FILESYSTEM_DISK', 'local'),
+
 
     'disks' => [
 
