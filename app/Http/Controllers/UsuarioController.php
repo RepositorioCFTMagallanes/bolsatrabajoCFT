@@ -152,14 +152,14 @@ class UsuarioController extends Controller
             // AVATAR
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
-                $estudiante->avatar_blob = file_get_contents($file->getRealPath());
+                $estudiante->avatar_blob = $file->get();
                 $estudiante->avatar_mime = $file->getMimeType();
             }
 
             // CV
             if ($request->hasFile('cv')) {
                 $file = $request->file('cv');
-                $estudiante->cv_blob = file_get_contents($file->getRealPath());
+                $estudiante->cv_blob = $file->get();
                 $estudiante->cv_mime = $file->getMimeType();
             }
 
