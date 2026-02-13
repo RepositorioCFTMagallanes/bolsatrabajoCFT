@@ -114,7 +114,9 @@ RUN sed -i 's/80/8080/g' \
 EXPOSE 8080
 
 # =====================================================
-# Arranque del servidor
+# Script de arranque para limpiar cache en runtime
 # =====================================================
-CMD php artisan config:clear && php artisan cache:clear && apache2-foreground
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
+CMD ["/usr/local/bin/start.sh"]
