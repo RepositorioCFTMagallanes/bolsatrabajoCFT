@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 use App\Services\OfertaRecommendationService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Response;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 class UsuarioController extends Controller
 {
@@ -149,19 +151,33 @@ class UsuarioController extends Controller
                 'modalidad_preferencia_id' => $request->modalidad,
             ]);
 
-            // AVATAR
+            // AVATAR (Cloudinary)
             if ($request->hasFile('avatar')) {
-                $file = $request->file('avatar');
-                $estudiante->avatar_blob = $file->get();
-                $estudiante->avatar_mime = $file->getMimeType();
+                $upload = Cloudinary::upload(
+                    $request->file('avatar')->getRealPath(),
+                    [
+                        'folder' => 'avatares_estudiantes',
+                        'public_id' => 'avatar_' . $estudiante->id . '_' . time(),
+                    ]
+                );
+
+                $estudiante->avatar_url = $upload->getSecurePath();
             }
 
-            // CV
+            // CV (Cloudinary)
             if ($request->hasFile('cv')) {
-                $file = $request->file('cv');
-                $estudiante->cv_blob = $file->get();
-                $estudiante->cv_mime = $file->getMimeType();
+                $upload = Cloudinary::upload(
+                    $request->file('cv')->getRealPath(),
+                    [
+                        'folder' => 'cv_estudiantes',
+                        'public_id' => 'cv_' . $estudiante->id . '_' . time(),
+                        'resource_type' => 'raw',
+                    ]
+                );
+
+                $estudiante->cv_url = $upload->getSecurePath();
             }
+
 
 
 
