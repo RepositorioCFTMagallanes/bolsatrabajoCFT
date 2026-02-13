@@ -77,13 +77,12 @@ steps:
       # SECRETS
       # ===============================
       - '--set-secrets'
-      - 'APP_KEY=APP_KEY:latest'
-      - '--set-secrets'
-      - 'DB_DATABASE=DB_DATABASE:latest'
-      - '--set-secrets'
-      - 'DB_USERNAME=DB_USERNAME:latest'
-      - '--set-secrets'
-      - 'DB_PASSWORD=DB_PASSWORD:latest'
+      - >-
+        APP_KEY=APP_KEY:latest,
+        DB_DATABASE=DB_DATABASE:latest,
+        DB_USERNAME=DB_USERNAME:latest,
+        DB_PASSWORD=DB_PASSWORD:latest
+
 
 # ===============================
 # Images built
