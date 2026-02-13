@@ -116,4 +116,5 @@ EXPOSE 8080
 # =====================================================
 # Arranque del servidor
 # =====================================================
-CMD ["apache2-foreground"]
+CMD php artisan config:clear && php artisan cache:clear && apache2-foreground
+
