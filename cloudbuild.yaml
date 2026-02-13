@@ -2,97 +2,73 @@ steps:
   # ===============================
   # Build the container image
   # ===============================
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - 'build'
-      - '-t'
-      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
-      - '-t'
-      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
-      - '.'
+      - "build"
+      - "-t"
+      - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
+      - "-t"
+      - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest"
+      - "."
 
   # ===============================
   # Push image (commit SHA)
   # ===============================
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - 'push'
-      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
+      - "push"
+      - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
 
   # ===============================
   # Push image (latest)
   # ===============================
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - 'push'
-      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+      - "push"
+      - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest"
 
   # ===============================
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run (ONE SINGLE DEPLOY)
   # ===============================
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
     args:
-      - 'run'
-      - 'deploy'
-      - '${_SERVICE_NAME}'
-      - '--image'
-      - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
-      - '--region'
-      - '${_DEPLOY_REGION}'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
+      - "run"
+      - "deploy"
+      - "${_SERVICE_NAME}"
+      - "--image"
+      - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
+      - "--region"
+      - "${_DEPLOY_REGION}"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
 
       # ===============================
-      # Cloud SQL
+      # ENV VARIABLES (Laravel + DB + GCS)
       # ===============================
-      - '--set-cloudsql-instances'
-      - '${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE}'
+      - "--set-env-vars=APP_NAME=PortalEmpleabilidad,APP_ENV=cloud,APP_DEBUG=false,APP_URL=${_APP_URL},DB_CONNECTION=pgsql,DB_HOST=34.31.99.145,DB_PORT=5432,DB_DATABASE=bolsatrabajo,DB_USERNAME=laravel,DB_PASSWORD=Laravel2026!,CACHE_STORE=database,SESSION_DRIVER=database,CACHE_CONNECTION=database,QUEUE_CONNECTION=sync,LOG_CHANNEL=stderr,LOG_LEVEL=info,FILESYSTEM_DISK=gcs,GOOGLE_CLOUD_PROJECT_ID=${_AR_PROJECT_ID},GOOGLE_CLOUD_STORAGE_BUCKET=magallanes-portal-files-prod,GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod"
 
       # ===============================
-      # ENV VARIABLES (Laravel + GCS)
+      # OPTIONAL: Cloud SQL connector (leave if you still want it)
+      # If you are using PUBLIC IP directly, this is not required.
       # ===============================
-      - '--set-env-vars'
-      - >-
-        APP_NAME=PortalEmpleabilidad,
-        APP_ENV=cloud,
-        APP_DEBUG=false,
-        APP_URL=${_APP_URL},
-        DB_CONNECTION=pgsql,
-        DB_HOST=34.31.99.145,
-        DB_PORT=5432,
-        CACHE_STORE=database,
-        SESSION_DRIVER=database,
-        CACHE_CONNECTION=database,
-        QUEUE_CONNECTION=sync,
-        LOG_CHANNEL=stderr,
-        LOG_LEVEL=info,
-        FILESYSTEM_DISK=gcs,
-        GOOGLE_CLOUD_PROJECT_ID=${_AR_PROJECT_ID},
-        GOOGLE_CLOUD_STORAGE_BUCKET=magallanes-portal-files-prod,
-        GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod,
-        DB_DATABASE=bolsatrabajo,
-        DB_USERNAME=laravel,
-        DB_PASSWORD=Laravel2026!
+      - "--set-cloudsql-instances"
+      - "${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE}"
 
-    
-# ===============================
-# Images built
-# ===============================
+      # ===============================
+      # SECRETS (keep APP_KEY as secret YES)
+      # ===============================
+      - "--set-secrets"
+      - "APP_KEY=APP_KEY:latest"
+
 images:
-  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
-  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+  - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
+  - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest"
 
-# ===============================
-# Build options
-# ===============================
 options:
   logging: CLOUD_LOGGING_ONLY
 
-# ===============================
-# Substitution variables
-# ===============================
 substitutions:
   _AR_HOSTNAME: us-central1-docker.pkg.dev
   _AR_PROJECT_ID: portal-empleabilidad-cft
