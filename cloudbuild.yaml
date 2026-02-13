@@ -56,7 +56,7 @@ steps:
       - '--set-env-vars'
       - >-
         APP_NAME=PortalEmpleabilidad,
-        APP_ENV=production,
+        APP_ENV=cloud,
         APP_DEBUG=false,
         APP_URL=${_APP_URL},
         DB_CONNECTION=pgsql,
