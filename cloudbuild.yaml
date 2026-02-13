@@ -60,7 +60,7 @@ steps:
         APP_DEBUG=false,
         APP_URL=${_APP_URL},
         DB_CONNECTION=pgsql,
-        DB_HOST=/cloudsql/${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE},
+        DB_HOST=34.31.99.145,
         DB_PORT=5432,
         CACHE_STORE=database,
         SESSION_DRIVER=database,
@@ -71,19 +71,12 @@ steps:
         FILESYSTEM_DISK=gcs,
         GOOGLE_CLOUD_PROJECT_ID=${_AR_PROJECT_ID},
         GOOGLE_CLOUD_STORAGE_BUCKET=magallanes-portal-files-prod,
-        GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod
+        GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod,
+        DB_DATABASE=bolsatrabajo,
+        DB_USERNAME=laravel,
+        DB_PASSWORD=Laravel2026!
 
-      # ===============================
-      # SECRETS
-      # ===============================
-      - '--set-secrets'
-      - >-
-        APP_KEY=APP_KEY:latest,
-        DB_DATABASE=DB_DATABASE:latest,
-        DB_USERNAME=DB_USERNAME:latest,
-        DB_PASSWORD=DB_PASSWORD:latest
-
-
+    
 # ===============================
 # Images built
 # ===============================
