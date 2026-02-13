@@ -28,7 +28,7 @@ steps:
       - "${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest"
 
   # ===============================
-  # Deploy to Cloud Run (ONE SINGLE DEPLOY)
+  # Deploy to Cloud Run
   # ===============================
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "gcloud"
@@ -45,19 +45,12 @@ steps:
       - "--allow-unauthenticated"
 
       # ===============================
-      # ENV VARIABLES (Laravel + DB + GCS)
+      # ENV VARIABLES
       # ===============================
       - "--set-env-vars=APP_NAME=PortalEmpleabilidad,APP_ENV=cloud,APP_DEBUG=false,APP_URL=${_APP_URL},DB_CONNECTION=pgsql,DB_HOST=34.31.99.145,DB_PORT=5432,DB_DATABASE=bolsatrabajo,DB_USERNAME=laravel,DB_PASSWORD=Laravel2026!,CACHE_STORE=database,SESSION_DRIVER=database,CACHE_CONNECTION=database,QUEUE_CONNECTION=sync,LOG_CHANNEL=stderr,LOG_LEVEL=info,FILESYSTEM_DISK=gcs,GOOGLE_CLOUD_PROJECT_ID=${_AR_PROJECT_ID},GOOGLE_CLOUD_STORAGE_BUCKET=magallanes-portal-files-prod,GOOGLE_CLOUD_STORAGE_URL=https://storage.googleapis.com/magallanes-portal-files-prod"
 
       # ===============================
-      # OPTIONAL: Cloud SQL connector (leave if you still want it)
-      # If you are using PUBLIC IP directly, this is not required.
-      # ===============================
-      - "--set-cloudsql-instances"
-      - "${_AR_PROJECT_ID}:${_DEPLOY_REGION}:${_CLOUDSQL_INSTANCE}"
-
-      # ===============================
-      # SECRETS (keep APP_KEY as secret YES)
+      # APP KEY desde Secret Manager
       # ===============================
       - "--set-secrets"
       - "APP_KEY=APP_KEY:latest"
@@ -75,5 +68,4 @@ substitutions:
   _AR_REPOSITORY: cloud-run
   _SERVICE_NAME: portal-empleabilidad
   _DEPLOY_REGION: us-central1
-  _CLOUDSQL_INSTANCE: empleabilidad-db
   _APP_URL: https://portal-empleabilidad-287614110959.us-central1.run.app
