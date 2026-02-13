@@ -24,8 +24,6 @@ class Estudiante extends Model
         'institucion',
         'anio_egreso',
         'cursos',
-        'ruta_cv',
-        'avatar',
         'linkedin_url',
         'portfolio_url',
         'area_interes_id',
@@ -36,12 +34,13 @@ class Estudiante extends Model
         'creado_en',
         'actualizado_en',
 
-        // NUEVOS CAMPOS BLOB
+        // BLOB
         'avatar_blob',
         'avatar_mime',
         'cv_blob',
         'cv_mime',
     ];
+
     protected $casts = [
         'avatar_mime' => 'string',
         'cv_mime' => 'string',

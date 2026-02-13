@@ -329,3 +329,5 @@ Route::get('/test-gcs', function () {
     ], 200);
 });
 
+Route::get('/estudiante/avatar/{id}', [UsuarioController::class, 'mostrarAvatar']);
+Route::get('/estudiante/cv/{id}', [UsuarioController::class, 'descargarCV']);

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\OfertaRecommendationService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Response;
 
 class UsuarioController extends Controller
 {
@@ -209,4 +210,31 @@ class UsuarioController extends Controller
 
         return view('users.postulaciones', compact('postulaciones'));
     }
+    public function mostrarAvatar($id)
+{
+    $estudiante = Estudiante::findOrFail($id);
+
+    if (!$estudiante->avatar_blob) {
+        abort(404);
+    }
+
+    return Response::make($estudiante->avatar_blob, 200, [
+        'Content-Type' => $estudiante->avatar_mime,
+        'Content-Disposition' => 'inline; filename="avatar"'
+    ]);
+}
+
+public function descargarCV($id)
+{
+    $estudiante = Estudiante::findOrFail($id);
+
+    if (!$estudiante->cv_blob) {
+        abort(404);
+    }
+
+    return Response::make($estudiante->cv_blob, 200, [
+        'Content-Type' => $estudiante->cv_mime,
+        'Content-Disposition' => 'attachment; filename="cv"'
+    ]);
+}
 }
