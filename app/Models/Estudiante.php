@@ -13,6 +13,11 @@ class Estudiante extends Model
     const CREATED_AT = 'creado_en';
     const UPDATED_AT = 'actualizado_en';
 
+    /*
+    |--------------------------------------------------------------------------
+    | CAMPOS PERMITIDOS PARA MASS ASSIGNMENT
+    |--------------------------------------------------------------------------
+    */
     protected $fillable = [
         'usuario_id',
         'run',
@@ -34,16 +39,16 @@ class Estudiante extends Model
         'creado_en',
         'actualizado_en',
 
-        // NUEVOS CAMPOS CLOUDINARY
+        // CLOUDINARY
         'avatar_url',
         'cv_url',
     ];
 
-
-    protected $casts = [
-        'avatar_mime' => 'string',
-        'cv_mime' => 'string',
-    ];
+    /*
+    |--------------------------------------------------------------------------
+    | RELACIONES
+    |--------------------------------------------------------------------------
+    */
 
     public function usuario()
     {
@@ -53,5 +58,21 @@ class Estudiante extends Model
     public function postulaciones()
     {
         return $this->hasMany(Postulacion::class, 'estudiante_id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS SEGUROS (OPCIONAL PERO RECOMENDADO)
+    |--------------------------------------------------------------------------
+    */
+
+    public function getAvatarFinalAttribute()
+    {
+        return $this->avatar_url ?: asset('img/default-avatar.png');
+    }
+
+    public function getCvDisponibleAttribute()
+    {
+        return !empty($this->cv_url);
     }
 }

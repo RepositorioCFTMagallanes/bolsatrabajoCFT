@@ -5,14 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Estudiante;
 use App\Models\Postulacion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\OfertaRecommendationService;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Response;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-
 
 class UsuarioController extends Controller
 {
@@ -151,9 +147,16 @@ class UsuarioController extends Controller
                 'modalidad_preferencia_id' => $request->modalidad,
             ]);
 
-            // AVATAR (Cloudinary)
+            /*
+            ====================================
+            AVATAR CLOUDINARY
+            ====================================
+            */
             if ($request->hasFile('avatar')) {
-                $upload = Cloudinary::upload(
+
+                Log::info('Subiendo avatar a Cloudinary');
+
+                $upload = Cloudinary::uploadFile(
                     $request->file('avatar')->getRealPath(),
                     [
                         'folder' => 'avatares_estudiantes',
@@ -164,9 +167,16 @@ class UsuarioController extends Controller
                 $estudiante->avatar_url = $upload->getSecurePath();
             }
 
-            // CV (Cloudinary)
+            /*
+            ====================================
+            CV CLOUDINARY
+            ====================================
+            */
             if ($request->hasFile('cv')) {
-                $upload = Cloudinary::upload(
+
+                Log::info('Subiendo CV a Cloudinary');
+
+                $upload = Cloudinary::uploadFile(
                     $request->file('cv')->getRealPath(),
                     [
                         'folder' => 'cv_estudiantes',
@@ -177,10 +187,6 @@ class UsuarioController extends Controller
 
                 $estudiante->cv_url = $upload->getSecurePath();
             }
-
-
-
-
 
             // GUARDAR CAMBIOS
             $estudiante->save();
@@ -194,11 +200,17 @@ class UsuarioController extends Controller
             DB::rollBack();
 
             Log::error('Error al actualizar perfil estudiante', [
-                'error' => $e->getMessage(),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'has_avatar' => $request->hasFile('avatar'),
+                'has_cv' => $request->hasFile('cv'),
+                'cloudinary_url_set' => !empty(env('CLOUDINARY_URL')),
             ]);
 
             return redirect('/usuarios/editar')
-                ->with('error', 'Ocurrió un error al actualizar el perfil.');
+                ->with('error', 'Error real: ' . $e->getMessage());
         }
     }
 
@@ -226,5 +238,4 @@ class UsuarioController extends Controller
 
         return view('users.postulaciones', compact('postulaciones'));
     }
-
 }
