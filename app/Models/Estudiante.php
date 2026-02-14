@@ -34,12 +34,11 @@ class Estudiante extends Model
         'creado_en',
         'actualizado_en',
 
-        // BLOB
-        'avatar_blob',
-        'avatar_mime',
-        'cv_blob',
-        'cv_mime',
+        // NUEVOS CAMPOS CLOUDINARY
+        'avatar_url',
+        'cv_url',
     ];
+
 
     protected $casts = [
         'avatar_mime' => 'string',

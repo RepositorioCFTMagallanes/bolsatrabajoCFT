@@ -226,39 +226,5 @@ class UsuarioController extends Controller
 
         return view('users.postulaciones', compact('postulaciones'));
     }
-    public function mostrarAvatar($id)
-    {
-        $estudiante = Estudiante::findOrFail($id);
 
-        if (!$estudiante->avatar_blob) {
-            abort(404);
-        }
-
-        $avatar = is_resource($estudiante->avatar_blob)
-            ? stream_get_contents($estudiante->avatar_blob)
-            : $estudiante->avatar_blob;
-
-        return Response::make($avatar, 200, [
-            'Content-Type' => $estudiante->avatar_mime,
-            'Content-Disposition' => 'inline; filename="avatar"'
-        ]);
-    }
-
-    public function descargarCV($id)
-    {
-        $estudiante = Estudiante::findOrFail($id);
-
-        if (!$estudiante->cv_blob) {
-            abort(404);
-        }
-
-        $cv = is_resource($estudiante->cv_blob)
-            ? stream_get_contents($estudiante->cv_blob)
-            : $estudiante->cv_blob;
-
-        return Response::make($cv, 200, [
-            'Content-Type' => $estudiante->cv_mime,
-            'Content-Disposition' => 'attachment; filename="cv.pdf"'
-        ]);
-    }
 }

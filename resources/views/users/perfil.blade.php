@@ -4,8 +4,9 @@
 <main class="container perfil-user">
 
     @php
-    $avatarUrl = asset('img/default-avatar.png');
-    $cvUrl = null;
+    $avatarUrl = $estudiante->avatar_url ?? asset('img/default-avatar.png');
+    $cvUrl = $estudiante->cv_url ?? null;
+
 
     if (!empty($estudiante->avatar_blob)) {
     $avatarUrl = url('/estudiante/avatar/' . $estudiante->id);
