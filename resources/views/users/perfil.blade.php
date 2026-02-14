@@ -4,21 +4,9 @@
 <main class="container perfil-user">
 
     @php
-    $avatarUrl = $estudiante->avatar_url ?? asset('img/default-avatar.png');
-    $cvUrl = $estudiante->cv_url ?? null;
-
-
-    if (!empty($estudiante->avatar_blob)) {
-    $avatarUrl = url('/estudiante/avatar/' . $estudiante->id);
-    }
-
-    if (!empty($estudiante->cv_blob)) {
-    $cvUrl = url('/estudiante/cv/' . $estudiante->id);
-    }
+        $avatarUrl = $estudiante->avatar_url ?? asset('img/default-avatar.png');
+        $cvUrl = $estudiante->cv_url ?? null;
     @endphp
-
-
-
 
     {{-- =========================================================
         HEADER DEL PERFIL: AVATAR + INFORMACIÓN PRINCIPAL
@@ -41,7 +29,6 @@
                     <p class="user-status">
                         📘 Estado Carrera:
                         <strong>{{ $estudiante->estado_carrera ?? 'No informado' }}</strong><br>
-
                         🎓 {{ $estudiante->carrera ?? 'Carrera no registrada' }}
                     </p>
                 </div>
@@ -50,26 +37,25 @@
             {{-- Resumen --}}
             <p class="user-intro">
                 {{ $estudiante->resumen
-                        ? $estudiante->resumen
-                        : 'Aquí puedes gestionar tus postulaciones y revisar las ofertas disponibles para ti.' }}
+                    ? $estudiante->resumen
+                    : 'Aquí puedes gestionar tus postulaciones y revisar las ofertas disponibles para ti.' }}
             </p>
 
             {{-- Acciones --}}
             <div class="user-actions">
-                <a href="{{ url('/usuarios/editar') }}" class="btn btn-primary">Editar Perfil</a>
+                <a href="{{ url('/usuarios/editar') }}" class="btn btn-primary">
+                    Editar Perfil
+                </a>
 
                 @if ($cvUrl)
-                <a href="{{ $cvUrl }}" target="_blank" class="btn btn-outline">
-                    Ver CV
-                </a>
+                    <a href="{{ $cvUrl }}" target="_blank" class="btn btn-outline">
+                        Ver CV
+                    </a>
                 @else
-                <span class="btn btn-outline disabled">Sin CV</span>
+                    <span class="btn btn-outline disabled">Sin CV</span>
                 @endif
-
-
             </div>
         </article>
-
 
         {{-- Tarjeta derecha: Actividad reciente --}}
         <article class="card activity-card">
@@ -92,8 +78,6 @@
 
     </section>
 
-
-
     {{-- =========================================================
          LISTADO DE POSTULACIONES
     ========================================================== --}}
@@ -101,60 +85,57 @@
         <h3 class="section-title">Mis Postulaciones</h3>
 
         @if ($postulaciones->isEmpty())
-        <p style="text-align:center; color:#6b7280; margin-bottom:1rem;">
-            Aún no has postulado a ninguna oferta.
-        </p>
+            <p style="text-align:center; color:#6b7280; margin-bottom:1rem;">
+                Aún no has postulado a ninguna oferta.
+            </p>
         @else
-        <div class="cards-grid-3 slider-mobile">
-            @foreach ($postulaciones as $postulacion)
-            @php
-            $oferta = $postulacion->oferta;
-            $empresa = $oferta?->empresa;
-            $titulo = $oferta?->titulo ?? 'Oferta sin título';
-            $empresaNombre = $empresa?->nombre_comercial ?? 'Empresa no registrada';
+            <div class="cards-grid-3 slider-mobile">
+                @foreach ($postulaciones as $postulacion)
+                    @php
+                        $oferta = $postulacion->oferta;
+                        $empresa = $oferta?->empresa;
+                        $titulo = $oferta?->titulo ?? 'Oferta sin título';
+                        $empresaNombre = $empresa?->nombre_comercial ?? 'Empresa no registrada';
 
-            $fecha = $postulacion->fecha_postulacion
-            ? date('d-m-Y', strtotime($postulacion->fecha_postulacion))
-            : null;
+                        $fecha = $postulacion->fecha_postulacion
+                            ? date('d-m-Y', strtotime($postulacion->fecha_postulacion))
+                            : null;
 
-            $logoUrl = asset('img/empresas/empresa (3).png');
+                        $logoUrl = asset('img/empresas/empresa (3).png');
 
-            try {
-            if ($empresa && $empresa->ruta_logo) {
-            $logoUrl = Storage::disk('gcs')->url($empresa->ruta_logo);
-            }
-            } catch (\Throwable $e) {
-            $logoUrl = asset('img/empresas/empresa (3).png');
-            }
-            @endphp
+                        try {
+                            if ($empresa && $empresa->ruta_logo) {
+                                $logoUrl = Storage::disk('gcs')->url($empresa->ruta_logo);
+                            }
+                        } catch (\Throwable $e) {
+                            $logoUrl = asset('img/empresas/empresa (3).png');
+                        }
+                    @endphp
 
-            <article class="card job-card">
-                <header class="job-head">
-                    <img src="{{ $logoUrl }}" class="job-icon" alt="Logo {{ $empresaNombre }}">
+                    <article class="card job-card">
+                        <header class="job-head">
+                            <img src="{{ $logoUrl }}" class="job-icon" alt="Logo {{ $empresaNombre }}">
+                            <h4 class="job-title">{{ $titulo }}</h4>
+                        </header>
 
-                    <h4 class="job-title">{{ $titulo }}</h4>
-                </header>
+                        <p class="job-company">{{ $empresaNombre }}</p>
 
-                <p class="job-company">{{ $empresaNombre }}</p>
+                        <div class="job-meta">
+                            <div class="job-meta-item">⏳ Postulado</div>
 
-                <div class="job-meta">
-                    <div class="job-meta-item">⏳ Postulado</div>
+                            @if ($fecha)
+                                <div class="job-meta-item">📅 {{ $fecha }}</div>
+                            @endif
+                        </div>
 
-                    @if ($fecha)
-                    <div class="job-meta-item">📅 {{ $fecha }}</div>
-                    @endif
-                </div>
-
-                <a href="{{ route('postulaciones.index') }}" class="job-link">
-                    Ver detalle
-                </a>
-            </article>
-            @endforeach
-        </div>
+                        <a href="{{ route('postulaciones.index') }}" class="job-link">
+                            Ver detalle
+                        </a>
+                    </article>
+                @endforeach
+            </div>
         @endif
     </section>
-
-
 
     {{-- =========================================================
          OFERTAS RECOMENDADAS
@@ -163,68 +144,64 @@
         <h3 class="section-title alt">Ofertas Recomendadas</h3>
 
         @if ($ofertasRecomendadas->isEmpty())
-        <p style="text-align:center; color:#6b7280; margin-bottom:1rem;">
-            Aún no tenemos recomendaciones suficientes para tu perfil.
-        </p>
+            <p style="text-align:center; color:#6b7280; margin-bottom:1rem;">
+                Aún no tenemos recomendaciones suficientes para tu perfil.
+            </p>
         @else
-        <div class="cards-grid-3 slider-mobile">
-            @foreach ($ofertasRecomendadas as $oferta)
-            @php
-            $empresa = $oferta->empresa;
+            <div class="cards-grid-3 slider-mobile">
+                @foreach ($ofertasRecomendadas as $oferta)
+                    @php
+                        $empresa = $oferta->empresa;
+                        $logoUrl = asset('img/empresas/empresa (4).png');
 
-            $logoUrl = asset('img/empresas/empresa (4).png');
+                        try {
+                            if ($empresa && $empresa->ruta_logo) {
+                                $logoUrl = Storage::disk('gcs')->url($empresa->ruta_logo);
+                            }
+                        } catch (\Throwable $e) {
+                            $logoUrl = asset('img/empresas/empresa (4).png');
+                        }
+                    @endphp
 
-            try {
-            if ($empresa && $empresa->ruta_logo) {
-            $logoUrl = Storage::disk('gcs')->url($empresa->ruta_logo);
-            }
-            } catch (\Throwable $e) {
-            $logoUrl = asset('img/empresas/empresa (4).png');
-            }
-            @endphp
+                    <article class="card job-card">
+                        <header class="job-head">
+                            <img src="{{ $logoUrl }}" class="job-icon"
+                                 alt="Logo {{ $empresa?->nombre_comercial ?? 'Empresa' }}">
+                            <h4 class="job-title">{{ $oferta->titulo }}</h4>
+                        </header>
 
-            <article class="card job-card">
-                <header class="job-head">
-                    <img src="{{ $logoUrl }}" class="job-icon"
-                        alt="Logo {{ $empresa?->nombre_comercial ?? 'Empresa' }}">
+                        <p class="job-company">
+                            {{ $empresa?->nombre_comercial ?? 'Empresa no registrada' }}
+                        </p>
 
-                    <h4 class="job-title">{{ $oferta->titulo }}</h4>
-                </header>
+                        <div class="job-meta">
+                            @if ($oferta->ciudad)
+                                <div class="job-meta-item">📍 {{ $oferta->ciudad }}</div>
+                            @endif
 
-                <p class="job-company">
-                    {{ $empresa?->nombre_comercial ?? 'Empresa no registrada' }}
-                </p>
+                            @if ($oferta->creado_en)
+                                <div class="job-meta-item">
+                                    📅 {{ date('d-m-Y', strtotime($oferta->creado_en)) }}
+                                </div>
+                            @endif
+                        </div>
 
-                <div class="job-meta">
-                    @if ($oferta->ciudad)
-                    <div class="job-meta-item">📍 {{ $oferta->ciudad }}</div>
-                    @endif
+                        <a href="{{ url('/ofertas/' . $oferta->id) }}" class="job-link">
+                            Ver Detalles
+                        </a>
+                    </article>
+                @endforeach
+            </div>
 
-                    @if ($oferta->creado_en)
-                    <div class="job-meta-item">
-                        📅 {{ date('d-m-Y', strtotime($oferta->creado_en)) }}
-                    </div>
-                    @endif
-                </div>
-
-                <a href="{{ url('/ofertas/' . $oferta->id) }}" class="job-link">
-                    Ver Detalles
+            <div class="recommended-footer">
+                <a href="{{ route('empleos.index') }}" class="btn-view-all">
+                    Ver todas las ofertas →
                 </a>
-            </article>
-            @endforeach
-        </div>
-
-        <div class="recommended-footer">
-            <a href="{{ route('empleos.index') }}" class="btn-view-all">
-                Ver todas las ofertas →
-            </a>
-        </div>
+            </div>
         @endif
     </section>
 
 </main>
-
-
 
 {{-- =========================================================
     ESTILOS
