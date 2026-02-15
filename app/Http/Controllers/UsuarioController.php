@@ -148,23 +148,27 @@ class UsuarioController extends Controller
             ]);
 
             /*
+/*
 ====================================
 AVATAR CLOUDINARY
 ====================================
 */
             if ($request->hasFile('avatar')) {
+                $avatarFile = $request->file('avatar');
 
-                Log::info('Subiendo avatar a Cloudinary');
+                // Verificar validez antes de intentar subir
+                if ($avatarFile->isValid()) {
+                    Log::info('Iniciando subida de Avatar', ['size' => $avatarFile->getSize()]);
 
-                $upload = Cloudinary::upload(
-                    $request->file('avatar')->getRealPath(),
-                    [
-                        'folder' => 'avatares_estudiantes',
-                        'public_id' => 'avatar_' . $estudiante->id . '_' . time(),
-                    ]
-                );
+                    $result = $avatarFile->storeOnCloudinaryAs(
+                        'avatares_estudiantes',
+                        'avatar_' . $estudiante->id . '_' . time()
+                    );
 
-                $estudiante->avatar_url = $upload->getSecurePath();
+                    $estudiante->avatar_url = $result->getSecurePath();
+                } else {
+                    Log::error('El archivo de avatar no es válido o está corrupto.');
+                }
             }
 
             /*
@@ -173,19 +177,30 @@ CV CLOUDINARY
 ====================================
 */
             if ($request->hasFile('cv')) {
+                $cvFile = $request->file('cv');
 
-                Log::info('Subiendo CV a Cloudinary');
+                if ($cvFile->isValid()) {
+                    Log::info('Iniciando subida de CV', ['size' => $cvFile->getSize()]);
 
-                $upload = Cloudinary::upload(
-                    $request->file('cv')->getRealPath(),
-                    [
-                        'folder' => 'cv_estudiantes',
-                        'public_id' => 'cv_' . $estudiante->id . '_' . time(),
-                        'resource_type' => 'raw',
-                    ]
-                );
+                    // Usamos storeOnCloudinary que es el wrapper nativo de Laravel-Cloudinary
+                    // Esto maneja mejor los streams en la nube que usar Cloudinary::uploadFile directo
+                    $result = $cvFile->storeOnCloudinaryAs(
+                        'cv_estudiantes',
+                        'cv_' . $estudiante->id . '_' . time()
+                    );
 
-                $estudiante->cv_url = $upload->getSecurePath();
+                    // IMPORTANTE: Si necesitas que sea RAW (para descarga forzada) o AUTO (para ver en navegador)
+                    // El wrapper por defecto suele usar 'auto', lo cual es mejor para PDFs que quieres previsualizar.
+
+                    $estudiante->cv_url = $result->getSecurePath();
+                } else {
+                    // Esto pasa si el archivo excede el post_max_size configurado en php.ini
+                    Log::error('El archivo CV falló en la carga (posible exceso de tamaño o error de TMP).', [
+                        'error_code' => $cvFile->getError(),
+                        'error_message' => $cvFile->getErrorMessage()
+                    ]);
+                    throw new \Exception('El archivo CV no se pudo cargar temporalmente en el servidor.');
+                }
             }
 
 

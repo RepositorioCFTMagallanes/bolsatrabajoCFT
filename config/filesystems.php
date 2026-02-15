@@ -75,6 +75,13 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
         ],
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'notification_url' => env('CLOUDINARY_NOTIFICATION_URL'),
+            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'), // Opcional si usas CLOUDINARY_URL
+        ],
+
+        
 
     ],
 
