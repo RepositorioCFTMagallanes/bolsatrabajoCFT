@@ -148,15 +148,15 @@ class UsuarioController extends Controller
             ]);
 
             /*
-            ====================================
-            AVATAR CLOUDINARY
-            ====================================
-            */
+====================================
+AVATAR CLOUDINARY
+====================================
+*/
             if ($request->hasFile('avatar')) {
 
                 Log::info('Subiendo avatar a Cloudinary');
 
-                $upload = Cloudinary::uploadFile(
+                $upload = Cloudinary::upload(
                     $request->file('avatar')->getRealPath(),
                     [
                         'folder' => 'avatares_estudiantes',
@@ -168,15 +168,15 @@ class UsuarioController extends Controller
             }
 
             /*
-            ====================================
-            CV CLOUDINARY
-            ====================================
-            */
+====================================
+CV CLOUDINARY
+====================================
+*/
             if ($request->hasFile('cv')) {
 
                 Log::info('Subiendo CV a Cloudinary');
 
-                $upload = Cloudinary::uploadFile(
+                $upload = Cloudinary::upload(
                     $request->file('cv')->getRealPath(),
                     [
                         'folder' => 'cv_estudiantes',
@@ -187,6 +187,7 @@ class UsuarioController extends Controller
 
                 $estudiante->cv_url = $upload->getSecurePath();
             }
+
 
             // GUARDAR CAMBIOS
             $estudiante->save();
