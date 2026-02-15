@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     zip \
     curl \
+    ca-certificates \
+    openssl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -29,6 +31,7 @@ RUN apt-get update && apt-get install -y \
         pcntl \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
+
 
 # =====================================================
 # Composer (desde imagen oficial)
