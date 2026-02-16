@@ -345,9 +345,13 @@ Route::get('/test-cloudinary', function () {
             ],
         ]);
 
-        // Crear archivo temporal
-        $tempFile = tempnam(sys_get_temp_dir(), 'cld');
-        file_put_contents($tempFile, 'Cloudinary test ' . now());
+        // Crear imagen PNG real en memoria
+        $tempFile = sys_get_temp_dir() . '/test.png';
+        $img = imagecreatetruecolor(200, 200);
+        $bg = imagecolorallocate($img, 0, 150, 255);
+        imagefill($img, 0, 0, $bg);
+        imagepng($img, $tempFile);
+        imagedestroy($img);
 
         $upload = $cloudinary->uploadApi()->upload(
             $tempFile,
@@ -360,7 +364,6 @@ Route::get('/test-cloudinary', function () {
             'ok' => true,
             'url' => $upload['secure_url'],
         ];
-
     } catch (\Throwable $e) {
         return [
             'error' => true,
@@ -368,6 +371,7 @@ Route::get('/test-cloudinary', function () {
         ];
     }
 });
+
 
 
 

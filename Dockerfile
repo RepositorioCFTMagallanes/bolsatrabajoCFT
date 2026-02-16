@@ -14,12 +14,16 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     openssl \
     libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
     libpq-dev \
     libmagic-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
+        gd \
         pdo \
         pdo_mysql \
         pdo_pgsql \
@@ -31,6 +35,7 @@ RUN apt-get update && apt-get install -y \
         pcntl \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
+
 
 
 # =====================================================
