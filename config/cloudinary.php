@@ -1,34 +1,23 @@
 <?php
 
 /*
- * This file is part of the Laravel Cloudinary package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+|--------------------------------------------------------------------------
+| Cloudinary Configuration
+|--------------------------------------------------------------------------
+|
+| Configuración mínima y estable para el paquete cloudinary-laravel.
+| Compatible con Laravel 12 y Cloud Run.
+|
+*/
 
 return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cloudinary URL (Prioridad 1)
+    | Cloud credentials (OBLIGATORIO)
     |--------------------------------------------------------------------------
     |
-    | Esta es la variable principal que estás usando en cloudbuild.yaml.
-    | La librería intentará usar esta URL primero para configurarse.
-    |
-    */
-    'cloud_url' => env('CLOUDINARY_URL'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cloudinary Configuration Array (OBLIGATORIO)
-    |--------------------------------------------------------------------------
-    |
-    | IMPORTANTE: Aunque uses 'cloud_url', la librería requiere que este array 
-    | exista para evitar el error "Undefined array key 'cloud'".
-    |
-    | Si tu CLOUDINARY_URL falla o no se detecta, usará estos valores.
+    | Estas variables deben existir en el entorno de Cloud Run.
     |
     */
     'cloud' => [
@@ -39,24 +28,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Notification URL
+    | Cloudinary URL (opcional pero recomendado)
     |--------------------------------------------------------------------------
+    |
+    | Formato:
+    | cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+    |
     */
-    'notification_url' => env('CLOUDINARY_NOTIFICATION_URL'),
+    'url' => env('CLOUDINARY_URL'),
 
     /*
     |--------------------------------------------------------------------------
-    | Upload Preset
+    | Seguridad
     |--------------------------------------------------------------------------
     */
-    'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Router / Controller Configuration
-    |--------------------------------------------------------------------------
-    */
-    'upload_route' => env('CLOUDINARY_UPLOAD_ROUTE'),
-    'upload_action' => env('CLOUDINARY_UPLOAD_ACTION'),
+    'secure' => true,
 
 ];
