@@ -164,7 +164,8 @@ class UsuarioController extends Controller
                     );
 
                     // Opción A: si tienes avatar_url
-                    $estudiante->avatar_url = $upload->getSecurePath();
+                    $estudiante->avatar = $upload->getSecurePath();
+
 
                     // Opción B: si NO tienes avatar_url, usa tu columna existente:
                     // $estudiante->avatar = $upload->getSecurePath();
@@ -188,7 +189,8 @@ class UsuarioController extends Controller
                     );
 
                     // Opción A:
-                    $estudiante->cv_url = $upload->getSecurePath();
+                    $estudiante->ruta_cv = $upload->getSecurePath();
+
 
                     // Opción B:
                     // $estudiante->ruta_cv = $upload->getSecurePath();

@@ -331,55 +331,7 @@ Route::get('/test-gcs', function () {
 });
 
 
-Route::get('/test-cloudinary', function () {
-
-    try {
-        $cloudinary = new Cloudinary([
-            'cloud' => [
-                'cloud_name' => config('cloudinary.cloud.cloud_name'),
-                'api_key'    => config('cloudinary.cloud.api_key'),
-                'api_secret' => config('cloudinary.cloud.api_secret'),
-            ],
-            'url' => [
-                'secure' => true,
-            ],
-        ]);
-
-        // Crear imagen PNG real en memoria
-        $tempFile = sys_get_temp_dir() . '/test.png';
-        $img = imagecreatetruecolor(200, 200);
-        $bg = imagecolorallocate($img, 0, 150, 255);
-        imagefill($img, 0, 0, $bg);
-        imagepng($img, $tempFile);
-        imagedestroy($img);
-
-        $upload = $cloudinary->uploadApi()->upload(
-            $tempFile,
-            ['folder' => 'debug']
-        );
-
-        unlink($tempFile);
-
-        return [
-            'ok' => true,
-            'url' => $upload['secure_url'],
-        ];
-    } catch (\Throwable $e) {
-        return [
-            'error' => true,
-            'message' => $e->getMessage(),
-        ];
-    }
-});
 
 
 
 
-Route::get('/debug-config-cloudinary', function () {
-    return response()->json([
-        'config_cloudinary' => config('cloudinary'),
-        'config_exists' => file_exists(config_path('cloudinary.php')),
-        'config_path' => config_path('cloudinary.php'),
-        'files_in_config' => scandir(config_path()),
-    ]);
-});
