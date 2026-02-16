@@ -188,8 +188,14 @@ class EmpresaController extends Controller
         $rutaArchivo = null;
 
         if ($request->hasFile('ruta_archivo')) {
-            $rutaArchivo = $request->file('ruta_archivo')->store('ofertas', 'public');
+            $file = $request->file('ruta_archivo');
+
+            if ($file->isValid()) {
+                $result = Cloudinary::upload($file->getRealPath());
+                $rutaArchivo = $result->getSecurePath();
+            }
         }
+
 
         /* -----------------------------
        2) Crear la oferta en BD
@@ -207,7 +213,7 @@ class EmpresaController extends Controller
             'direccion'          => $request->direccion,
             'sueldo_min'         => $request->sueldo_min,
             'sueldo_max'         => $request->sueldo_max,
-            'mostrar_sueldo'     => $request->mostrar_sueldo,
+            'mostrar_sueldo' => $request->has('mostrar_sueldo'),
             'beneficios'         => $request->beneficios,
             'requisitos'         => $request->requisitos,
             'descripcion'        => $request->descripcion,
@@ -223,13 +229,13 @@ class EmpresaController extends Controller
         // 📧 CORREO A ADMIN – NUEVA OFERTA
         // ================================
         // BrevoMailService::send(
-//     config('mail.from.address'),
-//     'Nueva oferta pendiente de aprobación',
-//     view('emails.nueva-oferta-admin', [
-//         'empresa' => $empresa->nombre_comercial ?? 'Empresa',
-//         'oferta'  => $oferta->titulo,
-//     ])->render()
-// );
+        //     config('mail.from.address'),
+        //     'Nueva oferta pendiente de aprobación',
+        //     view('emails.nueva-oferta-admin', [
+        //         'empresa' => $empresa->nombre_comercial ?? 'Empresa',
+        //         'oferta'  => $oferta->titulo,
+        //     ])->render()
+        // );
 
 
         /* -----------------------------
@@ -276,16 +282,14 @@ class EmpresaController extends Controller
            Si hay archivo nuevo → reemplazar
         ------------------------------ */
         if ($request->hasFile('ruta_archivo')) {
+            $file = $request->file('ruta_archivo');
 
-            // borrar archivo anterior si existe
-            if ($oferta->ruta_archivo && Storage::disk('public')->exists($oferta->ruta_archivo)) {
-                Storage::disk('public')->delete($oferta->ruta_archivo);
+            if ($file->isValid()) {
+                $result = Cloudinary::upload($file->getRealPath());
+                $oferta->ruta_archivo = $result->getSecurePath();
             }
-
-            // guardar nuevo archivo
-            $rutaArchivo = $request->file('ruta_archivo')->store('ofertas', 'public');
-            $oferta->ruta_archivo = $rutaArchivo;
         }
+
 
         /* -----------------------------
            Actualizar oferta
