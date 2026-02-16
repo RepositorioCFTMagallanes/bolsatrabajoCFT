@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Estudiante;
 use App\Models\Postulacion;
 use App\Services\BrevoMailService;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
 class EmpresaController extends Controller
@@ -111,22 +112,28 @@ class EmpresaController extends Controller
             'telefono_contacto',
         ]));
         // ===========================
-        // MANEJO DE LOGO DE EMPRESA
+        // LOGO EMPRESA (Cloudinary)
         // ===========================
         if ($request->hasFile('logo')) {
+            $logoFile = $request->file('logo');
 
-            // borrar logo anterior si existe
-            if ($empresa->ruta_logo && Storage::disk('public')->exists($empresa->ruta_logo)) {
-                Storage::disk('public')->delete($empresa->ruta_logo);
+            if ($logoFile->isValid()) {
+
+                $result = Cloudinary::upload(
+                    $logoFile->getRealPath()
+                );
+
+                $url = $result->getSecurePath();
+
+                if (!$url) {
+                    throw new \Exception('Cloudinary no devolvió URL de logo');
+                }
+
+                $empresa->ruta_logo = $url;
+                $empresa->save();
             }
-
-            // guardar nuevo logo (MISMO patrón que Recursos / Estudiante)
-            $filename = uniqid() . '.' . $request->file('logo')->getClientOriginalExtension();
-            $request->file('logo')->move(public_path('uploads/empresas'), $filename);
-
-            $empresa->ruta_logo = 'uploads/empresas/' . $filename;
-            $empresa->save();
         }
+
 
 
         return redirect()->route('empresas.perfil')
