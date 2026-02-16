@@ -331,20 +331,32 @@ Route::get('/test-gcs', function () {
 
 
 Route::get('/test-cloudinary', function () {
+    try {
 
-    $upload = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
-        public_path('img/default-avatar.png'),
-        [
-            'folder' => 'debug',
-            'public_id' => 'test_' . time(),
-        ]
-    );
+        $upload = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
+            public_path('img/default-avatar.png'),
+            [
+                'folder' => 'debug',
+                'public_id' => 'test_' . time(),
+            ]
+        );
 
-    return [
-        'ok' => true,
-        'url' => $upload->getSecurePath(),
-    ];
+        return [
+            'ok' => true,
+            'url' => $upload->getSecurePath(),
+        ];
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'error' => true,
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
 });
+
 
 
 
