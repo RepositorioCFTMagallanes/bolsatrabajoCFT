@@ -17,6 +17,7 @@ use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\RecursoPublicoController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Storage;
+use Cloudinary\Cloudinary;
 
 /*
 |--------------------------------------------------------------------------
@@ -331,29 +332,33 @@ Route::get('/test-gcs', function () {
 
 
 Route::get('/test-cloudinary', function () {
-    try {
 
-        $upload = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
+    try {
+        $cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+            'url' => [
+                'secure' => true,
+            ],
+        ]);
+
+        $upload = $cloudinary->uploadApi()->upload(
             public_path('img/default-avatar.png'),
-            [
-                'folder' => 'debug',
-                'public_id' => 'test_' . time(),
-            ]
+            ['folder' => 'debug']
         );
 
         return [
             'ok' => true,
-            'url' => $upload->getSecurePath(),
+            'url' => $upload['secure_url'],
         ];
-
     } catch (\Throwable $e) {
-
-        return response()->json([
+        return [
             'error' => true,
             'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-        ], 500);
+        ];
     }
 });
 
@@ -365,10 +370,3 @@ Route::get('/debug-config-cloudinary', function () {
         'files_in_config' => scandir(config_path()),
     ]);
 });
-
-
-
-
-
-
-
