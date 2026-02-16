@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Recurso;
 use Illuminate\Http\Request;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 class RecursoController extends Controller
 {
@@ -47,16 +49,19 @@ class RecursoController extends Controller
         $recurso->creado_en  = now();
         $recurso->actualizado_en = now();
 
-        // GUARDAR IMAGEN (si existe)
+        // GUARDAR IMAGEN EN CLOUDINARY (si existe)
         if ($request->hasFile('imagen')) {
 
-            $archivo = $request->file('imagen');
-            $nombre  = time() . '_' . $archivo->getClientOriginalName();
+            $upload = Cloudinary::upload(
+                $request->file('imagen')->getRealPath(),
+                [
+                    'folder' => 'recursos_empleabilidad'
+                ]
+            );
 
-            $archivo->move(public_path('uploads/recursos'), $nombre);
-
-            $recurso->imagen = 'uploads/recursos/' . $nombre;
+            $recurso->imagen = $upload->getSecurePath();
         }
+
 
         // GUARDAR EN DB
         $recurso->save();
@@ -98,22 +103,19 @@ class RecursoController extends Controller
         $recurso->estado        = $request->estado;
         $recurso->actualizado_en = now();
 
-        // SI SUBE UNA NUEVA IMAGEN, SE REEMPLAZA
+        // SI SUBE UNA NUEVA IMAGEN, SE REEMPLAZA EN CLOUDINARY
         if ($request->hasFile('imagen')) {
 
-            // eliminar la imagen anterior si existe
-            if ($recurso->imagen && file_exists(public_path($recurso->imagen))) {
-                unlink(public_path($recurso->imagen));
-            }
+            $upload = Cloudinary::upload(
+                $request->file('imagen')->getRealPath(),
+                [
+                    'folder' => 'recursos_empleabilidad'
+                ]
+            );
 
-            // guardar nueva
-            $archivo = $request->file('imagen');
-            $nombre  = time() . '_' . $archivo->getClientOriginalName();
-
-            $archivo->move(public_path('uploads/recursos'), $nombre);
-
-            $recurso->imagen = 'uploads/recursos/' . $nombre;
+            $recurso->imagen = $upload->getSecurePath();
         }
+
 
         // GUARDAR
         $recurso->save();
