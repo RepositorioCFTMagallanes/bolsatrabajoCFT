@@ -28,14 +28,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cloudinary URL (opcional pero recomendado)
+    | Cloudinary URL (OBLIGATORIO para el SDK)
     |--------------------------------------------------------------------------
     |
     | Formato:
     | cloudinary://API_KEY:API_SECRET@CLOUD_NAME
     |
     */
-    'url' => env('CLOUDINARY_URL'),
+    'cloud_url' => env('CLOUDINARY_URL'),
 
     /*
     |--------------------------------------------------------------------------
