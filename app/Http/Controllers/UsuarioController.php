@@ -74,19 +74,7 @@ class UsuarioController extends Controller
      */
     public function update(Request $request)
     {
-        return response()->json([
-            'has_avatar' => $request->hasFile('avatar'),
-            'files' => $request->allFiles(),
-            'avatar_info' => $request->file('avatar')
-                ? [
-                    'name' => $request->file('avatar')->getClientOriginalName(),
-                    'size' => $request->file('avatar')->getSize(),
-                    'mime' => $request->file('avatar')->getMimeType(),
-                ]
-                : null,
-        ]);
-
-
+        
         $usuarioId = session('usuario_id');
 
         if (!$usuarioId) {
