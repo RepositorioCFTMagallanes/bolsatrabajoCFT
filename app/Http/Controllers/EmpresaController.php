@@ -222,14 +222,15 @@ class EmpresaController extends Controller
         // ================================
         // 📧 CORREO A ADMIN – NUEVA OFERTA
         // ================================
-        BrevoMailService::send(
-            config('mail.from.address'), // o correo del admin
-            'Nueva oferta pendiente de aprobación',
-            view('emails.nueva-oferta-admin', [
-                'empresa' => $empresa->nombre_comercial ?? 'Empresa',
-                'oferta'  => $oferta->titulo,
-            ])->render()
-        );
+        // BrevoMailService::send(
+//     config('mail.from.address'),
+//     'Nueva oferta pendiente de aprobación',
+//     view('emails.nueva-oferta-admin', [
+//         'empresa' => $empresa->nombre_comercial ?? 'Empresa',
+//         'oferta'  => $oferta->titulo,
+//     ])->render()
+// );
+
 
         /* -----------------------------
        3) Redirección correcta
