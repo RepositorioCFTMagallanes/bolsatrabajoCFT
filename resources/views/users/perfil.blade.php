@@ -100,7 +100,8 @@
             $fecha = $postulacion->fecha_postulacion
             ? date('d-m-Y', strtotime($postulacion->fecha_postulacion))
             : null;
-            $logoUrl = $empresa->logo_url ?? asset('img/empresas/empresa (3).png');
+            $logoUrl = $empresa->ruta_logo ?? asset('img/empresas/empresa (3).png');
+
 
             @endphp
 
@@ -144,7 +145,8 @@
             @foreach ($ofertasRecomendadas as $oferta)
             @php
             $empresa = $oferta->empresa;
-            $logoUrl = $empresa->logo_url ?? asset('img/empresas/empresa (3).png');
+            $logoUrl = $empresa->ruta_logo ?? asset('img/empresas/empresa (3).png');
+
 
             @endphp
 
