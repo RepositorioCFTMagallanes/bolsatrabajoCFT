@@ -148,28 +148,23 @@ class UsuarioController extends Controller
                 'modalidad_preferencia_id' => $request->modalidad,
             ]);
 
-            // AVATAR (Cloudinary - SDK directo)
+            // AVATAR (Cloudinary)
             if ($request->hasFile('avatar')) {
                 $avatarFile = $request->file('avatar');
 
                 if ($avatarFile->isValid()) {
-                    Log::info('Subiendo avatar a Cloudinary', ['size' => $avatarFile->getSize()]);
 
-                    $upload = Cloudinary::upload(
-                        $avatarFile->getRealPath(),
-                        [
-                            'folder' => 'avatares_estudiantes',
-                            'public_id' => 'avatar_' . $estudiante->id . '_' . time(),
-                        ]
+                    $result = Cloudinary::upload(
+                        $avatarFile->getRealPath()
                     );
 
-                    $url = $upload->getSecurePath();
+                    $url = $result->getSecurePath();
 
                     if (!$url) {
                         throw new \Exception('Cloudinary no devolvió URL de avatar');
                     }
 
-                    $estudiante->avatar = $url;
+                    $estudiante->avatar_url = $url;
                 }
             }
 
@@ -179,26 +174,24 @@ class UsuarioController extends Controller
                 $cvFile = $request->file('cv');
 
                 if ($cvFile->isValid()) {
-                    Log::info('Subiendo CV a Cloudinary', ['size' => $cvFile->getSize()]);
 
-                    $upload = Cloudinary::upload(
+                    $result = Cloudinary::upload(
                         $cvFile->getRealPath(),
                         [
-                            'folder' => 'cv_estudiantes',
-                            'public_id' => 'cv_' . $estudiante->id . '_' . time(),
-                            'resource_type' => 'raw',
+                            'resource_type' => 'raw'
                         ]
                     );
 
-                    $url = $upload->getSecurePath();
+                    $url = $result->getSecurePath();
 
                     if (!$url) {
                         throw new \Exception('Cloudinary no devolvió URL de CV');
                     }
 
-                    $estudiante->ruta_cv = $url;
+                    $estudiante->cv_url = $url;
                 }
             }
+
 
 
 
