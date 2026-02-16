@@ -357,6 +357,16 @@ Route::get('/test-cloudinary', function () {
     }
 });
 
+Route::get('/debug-config-cloudinary', function () {
+    return response()->json([
+        'config_cloudinary' => config('cloudinary'),
+        'config_exists' => file_exists(config_path('cloudinary.php')),
+        'config_path' => config_path('cloudinary.php'),
+        'files_in_config' => scandir(config_path()),
+    ]);
+});
+
+
 
 
 
