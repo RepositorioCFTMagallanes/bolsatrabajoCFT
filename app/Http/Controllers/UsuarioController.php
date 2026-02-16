@@ -74,7 +74,7 @@ class UsuarioController extends Controller
      */
     public function update(Request $request)
     {
-        
+
         $usuarioId = session('usuario_id');
 
         if (!$usuarioId) {
@@ -163,14 +163,16 @@ class UsuarioController extends Controller
                         ]
                     );
 
-                    // Opción A: si tienes avatar_url
-                    $estudiante->avatar = $upload->getSecurePath();
+                    $url = $upload->getSecurePath();
 
+                    if (!$url) {
+                        throw new \Exception('Cloudinary no devolvió URL de avatar');
+                    }
 
-                    // Opción B: si NO tienes avatar_url, usa tu columna existente:
-                    // $estudiante->avatar = $upload->getSecurePath();
+                    $estudiante->avatar = $url;
                 }
             }
+
 
             // CV (Cloudinary - PDF como raw)
             if ($request->hasFile('cv')) {
@@ -188,12 +190,13 @@ class UsuarioController extends Controller
                         ]
                     );
 
-                    // Opción A:
-                    $estudiante->ruta_cv = $upload->getSecurePath();
+                    $url = $upload->getSecurePath();
 
+                    if (!$url) {
+                        throw new \Exception('Cloudinary no devolvió URL de CV');
+                    }
 
-                    // Opción B:
-                    // $estudiante->ruta_cv = $upload->getSecurePath();
+                    $estudiante->ruta_cv = $url;
                 }
             }
 
