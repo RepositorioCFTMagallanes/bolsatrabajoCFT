@@ -11,8 +11,12 @@ echo "DB_PORT=${DB_PORT:-<null>}"
 echo "DB_DATABASE=${DB_DATABASE:-<null>}"
 echo "DB_USERNAME=${DB_USERNAME:-<null>}"
 
-# 2) Limpiar caches (esto es lo clave)
-php artisan optimize:clear || true
+# 2) Limpiar caches Laravel (explícito)
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+php artisan cache:clear || true
+
 
 # 3) (Opcional por ahora) NO cachear config hasta confirmar que funciona
 # php artisan config:cache

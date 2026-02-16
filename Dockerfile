@@ -97,8 +97,8 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 # Configuración PHP segura para uploads
 # (AJUSTE CRÍTICO PARA BLOB Y CLOUD RUN)
 # =====================================================
-RUN echo "upload_max_filesize=10M" > /usr/local/etc/php/conf.d/uploads.ini \
- && echo "post_max_size=10M" >> /usr/local/etc/php/conf.d/uploads.ini \
+RUN echo "upload_max_filesize=16M" > /usr/local/etc/php/conf.d/uploads.ini \
+ && echo "post_max_size=16M" >> /usr/local/etc/php/conf.d/uploads.ini \
  && echo "memory_limit=256M" >> /usr/local/etc/php/conf.d/uploads.ini \
  && echo "max_execution_time=120" >> /usr/local/etc/php/conf.d/uploads.ini \
  && echo "upload_tmp_dir=/tmp" >> /usr/local/etc/php/conf.d/uploads.ini \
