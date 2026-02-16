@@ -329,3 +329,17 @@ Route::get('/test-gcs', function () {
     ], 200);
 });
 
+
+Route::get('/debug-env', function () {
+    return response()->json([
+        'APP_ENV' => env('APP_ENV'),
+        'FILESYSTEM_DISK' => env('FILESYSTEM_DISK'),
+        'CLOUDINARY_URL' => env('CLOUDINARY_URL') ? 'SET' : 'NULL',
+        'GOOGLE_CLOUD_PROJECT_ID' => env('GOOGLE_CLOUD_PROJECT_ID'),
+        'GOOGLE_CLOUD_STORAGE_BUCKET' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
+    ]);
+});
+
+
+
+
