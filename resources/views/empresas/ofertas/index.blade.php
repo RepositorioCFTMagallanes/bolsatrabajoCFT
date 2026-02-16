@@ -1,4 +1,8 @@
 @extends('layouts.app')
+@php
+use Illuminate\Support\Str;
+@endphp
+
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/empresas-mis-ofertas.css') }}">
@@ -42,7 +46,7 @@
 
                     {{-- Logo --}}
                     <div class="oferta-logo">
-                        <img src="{{ $empresa->ruta_logo ? asset($empresa->ruta_logo) : asset('img/logo-placeholder.png') }}"
+                        <img src="{{ $empresa->ruta_logo ?? asset('img/logo-placeholder.png') }}"
                             alt="Logo empresa">
                     </div>
 

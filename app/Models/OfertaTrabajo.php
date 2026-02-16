@@ -58,9 +58,12 @@ class OfertaTrabajo extends Model
         'actualizado_en',
     ];
     protected $casts = [
-        'estado'       => 'integer',
-        'fecha_cierre' => 'date',
-    ];
+    'estado'        => 'integer',
+    'fecha_cierre'  => 'date',
+    'creado_en'     => 'datetime',
+    'actualizado_en'=> 'datetime',
+];
+
 
 
     const CREATED_AT = 'creado_en';
