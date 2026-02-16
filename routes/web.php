@@ -345,10 +345,16 @@ Route::get('/test-cloudinary', function () {
             ],
         ]);
 
+        // Crear archivo temporal
+        $tempFile = tempnam(sys_get_temp_dir(), 'cld');
+        file_put_contents($tempFile, 'Cloudinary test ' . now());
+
         $upload = $cloudinary->uploadApi()->upload(
-            public_path('img/default-avatar.png'),
+            $tempFile,
             ['folder' => 'debug']
         );
+
+        unlink($tempFile);
 
         return [
             'ok' => true,
@@ -362,6 +368,7 @@ Route::get('/test-cloudinary', function () {
         ];
     }
 });
+
 
 
 Route::get('/debug-config-cloudinary', function () {
