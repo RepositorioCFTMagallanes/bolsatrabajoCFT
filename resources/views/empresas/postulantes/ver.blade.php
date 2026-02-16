@@ -16,11 +16,8 @@
         <div class="profile-header">
             {{-- Avatar del estudiante --}}
             <img class="avatar"
-                src="{{ $estudiante->avatar_url
-        ? $estudiante->avatar_url
-        : asset('img/default-avatar.png') }}"
+                src="{{ $estudiante->avatar_url ?: asset('img/default-avatar.png') }}"
                 alt="Foto estudiante">
-
 
             <div class="profile-info">
                 <h2 class="name">
