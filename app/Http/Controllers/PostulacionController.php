@@ -7,7 +7,9 @@ use App\Models\Estudiante;
 use App\Models\OfertaTrabajo;
 use App\Models\Postulacion;
 use App\Models\Usuario;
-use App\Services\BrevoMailService;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PostulacionConfirmadaMail;
+
 
 
 class PostulacionController extends Controller
@@ -74,31 +76,26 @@ class PostulacionController extends Controller
         // Usuario estudiante
         $usuarioEstudiante = Usuario::find($usuarioId);
 
-        // Correo al ESTUDIANTE (NO debe romper el flujo)
-        BrevoMailService::send(
-            $usuarioEstudiante->email,
-            'Postulación enviada correctamente',
-            view('emails.postulacion-confirmada', [
-                'nombre' => $usuarioEstudiante->nombre,
-                'oferta' => $oferta->titulo,
-            ])->render()
-        );
+        // Correo al ESTUDIANTE
+        Mail::to($usuarioEstudiante->email)
+            ->send(new PostulacionConfirmadaMail(
+                $usuarioEstudiante->nombre,
+                $oferta->titulo
+            ));
 
+        // Correo a la EMPRESA (lo activamos después)
+        // if ($oferta->empresa && $oferta->empresa->correo_contacto) {
+        //     Mail::to($oferta->empresa->correo_contacto)
+        //         ->send(new NuevaPostulacionEmpresaMail(
+        //             $usuarioEstudiante->nombre . ' ' . $usuarioEstudiante->apellido,
+        //             $oferta->titulo
+        //         ));
+        // }
 
-        // Correo a la EMPRESA (NO debe romper el flujo)
-        if ($oferta->empresa && $oferta->empresa->correo_contacto) {
-            BrevoMailService::send(
-                $oferta->empresa->correo_contacto,
-                'Nueva postulación recibida',
-                view('emails.nueva-postulacion-empresa', [
-                    'nombre' => $usuarioEstudiante->nombre . ' ' . $usuarioEstudiante->apellido,
-                    'oferta' => $oferta->titulo,
-                ])->render()
-            );
-        }
-        // 7. Devolver mensaje
+        // 8. Devolver mensaje
         return back()->with('success', '¡Tu postulación fue enviada exitosamente!');
     }
+
 
     /**
      * Mostrar las postulaciones del estudiante
