@@ -338,6 +338,10 @@ Route::get('/test-mail', function () {
 
     return "Correo enviado";
 });
+Route::get('/test-ofertas', function () {
+    \Artisan::call('ofertas:enviar-recomendadas');
+    return 'Comando de ofertas ejecutado';
+});
 
 
 
