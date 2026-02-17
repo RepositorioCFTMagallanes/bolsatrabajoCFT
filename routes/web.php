@@ -18,6 +18,7 @@ use App\Http\Controllers\RecursoPublicoController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Storage;
 use Cloudinary\Cloudinary;
+use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -328,6 +329,14 @@ Route::get('/test-gcs', function () {
         'bucket' => config('filesystems.disks.gcs.bucket'),
         'path' => $path,
     ], 200);
+});
+Route::get('/test-mail', function () {
+    Mail::raw('Test de correo desde Portal Empleabilidad CFT', function ($message) {
+        $message->to('repositorio@cftdemagallanes.cl')
+                ->subject('Test correo portal CFT');
+    });
+
+    return "Correo enviado";
 });
 
 
