@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\ResetPasswordMail;
 
 class PasswordResetController extends Controller
 {
@@ -55,24 +57,20 @@ class PasswordResetController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        // 6️⃣ Enviar correo vía BREVO API (NO SMTP)
-        Http::withHeaders([
-            'api-key' => config('services.brevo.key'),
-            'Content-Type' => 'application/json',
-        ])->post('https://api.brevo.com/v3/smtp/email', [
-            'sender' => [
-                'name' => 'CFT Magallanes',
-                'email' => config('mail.from.address'),
-            ],
-            'to' => [
-                ['email' => $email]
-            ],
-            'subject' => 'Recuperación de contraseña – Portal Empleabilidad',
-            'htmlContent' => view('emails.password-reset', [
-                'token' => $tokenPlano,
-                'email' => $email,
-            ])->render(),
-        ]);
+        // 6️⃣ Enviar correo usando sistema nativo Laravel (fail-safe)
+        try {
+            Mail::to($email)
+                ->send(new ResetPasswordMail(
+                    $tokenPlano,
+                    $email
+                ));
+        } catch (\Throwable $e) {
+            Log::error('Error enviando correo de recuperación', [
+                'error' => $e->getMessage(),
+                'email' => $email
+            ]);
+        }
+
 
 
         // 7️⃣ Mensaje final

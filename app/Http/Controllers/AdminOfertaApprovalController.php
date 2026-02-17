@@ -5,7 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\OfertaTrabajo;
 use Illuminate\Http\Request;
 use App\Services\AlertMessageService;
-use App\Services\BrevoMailService;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\OfertaAprobadaEmpresaMail;
+use App\Mail\OfertaRechazadaEmpresaMail;
+use App\Mail\OfertaReenvioEmpresaMail;
+
 
 
 class AdminOfertaApprovalController extends Controller
@@ -78,17 +83,22 @@ class AdminOfertaApprovalController extends Controller
         // CORREO A EMPRESA (OFERTA APROBADA)
         // ================================
         if ($oferta->empresa && $oferta->empresa->correo_contacto) {
-            BrevoMailService::send(
-                $oferta->empresa->correo_contacto,
-                'Tu oferta ha sido aprobada',
-                view('emails.oferta-aprobada-empresa', [
-                    'empresa' => $oferta->empresa->razon_social
-                        ?? $oferta->empresa->nombre_comercial
-                        ?? 'Empresa',
-                    'titulo' => $oferta->titulo,
-                ])->render()
-            );
+            try {
+                Mail::to($oferta->empresa->correo_contacto)
+                    ->send(new OfertaAprobadaEmpresaMail(
+                        $oferta->empresa->razon_social
+                            ?? $oferta->empresa->nombre_comercial
+                            ?? 'Empresa',
+                        $oferta->titulo
+                    ));
+            } catch (\Throwable $e) {
+                Log::error('Error enviando correo oferta aprobada', [
+                    'error' => $e->getMessage(),
+                    'oferta_id' => $oferta->id,
+                ]);
+            }
         }
+
 
         $mensaje = AlertMessageService::mensaje('APROBADA');
 
@@ -115,18 +125,23 @@ class AdminOfertaApprovalController extends Controller
         // 📧 CORREO A EMPRESA (RECHAZO)
         // ================================
         if ($oferta->empresa && $oferta->empresa->correo_contacto) {
-            BrevoMailService::send(
-                $oferta->empresa->correo_contacto,
-                'Oferta rechazada – Requiere correcciones',
-                view('emails.oferta-rechazada-empresa', [
-                    'empresa' => $oferta->empresa->razon_social
-                        ?? $oferta->empresa->nombre_comercial
-                        ?? 'Empresa',
-                    'titulo' => $oferta->titulo,
-                    'motivo' => $motivo,
-                ])->render()
-            );
+            try {
+                Mail::to($oferta->empresa->correo_contacto)
+                    ->send(new OfertaRechazadaEmpresaMail(
+                        $oferta->empresa->razon_social
+                            ?? $oferta->empresa->nombre_comercial
+                            ?? 'Empresa',
+                        $oferta->titulo,
+                        $motivo
+                    ));
+            } catch (\Throwable $e) {
+                Log::error('Error enviando correo oferta rechazada', [
+                    'error' => $e->getMessage(),
+                    'oferta_id' => $oferta->id,
+                ]);
+            }
         }
+
 
         $mensaje = AlertMessageService::mensaje('RECHAZADA');
 
@@ -154,18 +169,23 @@ class AdminOfertaApprovalController extends Controller
         // 📧 CORREO A EMPRESA (REENVÍO)
         // ================================
         if ($oferta->empresa && $oferta->empresa->correo_contacto) {
-            BrevoMailService::send(
-                $oferta->empresa->correo_contacto,
-                'Correcciones solicitadas para tu oferta laboral',
-                view('emails.oferta-reenvio-empresa', [
-                    'empresa' => $oferta->empresa->razon_social
-                        ?? $oferta->empresa->nombre_comercial
-                        ?? 'Empresa',
-                    'titulo' => $oferta->titulo,
-                    'motivo' => $motivo,
-                ])->render()
-            );
+            try {
+                Mail::to($oferta->empresa->correo_contacto)
+                    ->send(new OfertaReenvioEmpresaMail(
+                        $oferta->empresa->razon_social
+                            ?? $oferta->empresa->nombre_comercial
+                            ?? 'Empresa',
+                        $oferta->titulo,
+                        $motivo
+                    ));
+            } catch (\Throwable $e) {
+                Log::error('Error enviando correo oferta reenviada', [
+                    'error' => $e->getMessage(),
+                    'oferta_id' => $oferta->id,
+                ]);
+            }
         }
+
 
         $mensaje = AlertMessageService::mensaje('REENVIADA');
 

@@ -8,8 +8,11 @@ use App\Models\Estudiante;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-use App\Services\BrevoMailService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\WelcomeMail;
+
 
 class AuthController extends Controller
 {
@@ -76,13 +79,13 @@ class AuthController extends Controller
     /* ============================================================
        LOGOUT
     ============================================================ */
-    
+
     public function logout()
-{
-    Session::flush();
-    session()->forget('url.intended');
-    return redirect('/login');
-}
+    {
+        Session::flush();
+        session()->forget('url.intended');
+        return redirect('/login');
+    }
 
 
 
@@ -129,14 +132,16 @@ class AuthController extends Controller
                 'usuario_id' => $usuario->id,
             ]);
         }
-        // CORREO DE BIENVENIDA
-        BrevoMailService::send(
-            $usuario->email,
-            'Bienvenido/a al Portal de Empleabilidad CFT Magallanes',
-            view('emails.welcome', [
-                'nombre' => $usuario->nombre,
-            ])->render()
-        );
+        // CORREO DE BIENVENIDA (sistema nativo Laravel - fail-safe)
+        try {
+            Mail::to($usuario->email)
+                ->send(new WelcomeMail($usuario->nombre));
+        } catch (\Throwable $e) {
+            Log::error('Error enviando correo de bienvenida', [
+                'error' => $e->getMessage(),
+                'email' => $usuario->email
+            ]);
+        }
 
         return redirect('/login')->with('status', 'Cuenta creada con éxito.');
     }

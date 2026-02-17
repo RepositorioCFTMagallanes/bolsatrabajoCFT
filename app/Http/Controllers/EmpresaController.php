@@ -8,7 +8,9 @@ use App\Models\OfertaTrabajo;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Estudiante;
 use App\Models\Postulacion;
-use App\Services\BrevoMailService;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\NuevaOfertaAdminMail;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
@@ -228,15 +230,18 @@ class EmpresaController extends Controller
         // ================================
         // 📧 CORREO A ADMIN – NUEVA OFERTA
         // ================================
-        // BrevoMailService::send(
-        //     config('mail.from.address'),
-        //     'Nueva oferta pendiente de aprobación',
-        //     view('emails.nueva-oferta-admin', [
-        //         'empresa' => $empresa->nombre_comercial ?? 'Empresa',
-        //         'oferta'  => $oferta->titulo,
-        //     ])->render()
-        // );
-
+        try {
+            Mail::to(config('mail.from.address'))
+                ->send(new NuevaOfertaAdminMail(
+                    $empresa->nombre_comercial ?? 'Empresa',
+                    $oferta->titulo
+                ));
+        } catch (\Throwable $e) {
+            Log::error('Error enviando correo nueva oferta a admin', [
+                'error' => $e->getMessage(),
+                'oferta_id' => $oferta->id ?? null,
+            ]);
+        }
 
         /* -----------------------------
        3) Redirección correcta
